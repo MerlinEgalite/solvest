@@ -11,7 +11,7 @@ abstract contract Vest is Owned {
 
     error PermissionDenied();
     error OnlyReceiver();
-    error InvalidReceiver();
+    error AddressIsZero();
     error InvalidTotal();
     error StartTooFar();
     error StartTooLongAgo();
@@ -58,6 +58,10 @@ abstract contract Vest is Owned {
 
     /* GETTERS */
 
+    function TWENTY_YEARS() external pure returns (uint256) {
+        return _TWENTY_YEARS;
+    }
+
     function getVesting(uint256 id) external view returns (Vesting memory) {
         return _vestings[id];
     }
@@ -82,7 +86,7 @@ abstract contract Vest is Owned {
         bool protected,
         uint256 total
     ) external onlyOwner returns (uint256 id) {
-        if (receiver == address(0)) revert InvalidReceiver();
+        if (receiver == address(0)) revert AddressIsZero();
         if (total == 0) revert InvalidTotal();
         if (start > block.timestamp + _TWENTY_YEARS) revert StartTooFar();
         if (start < block.timestamp - _TWENTY_YEARS) revert StartTooLongAgo();
@@ -151,7 +155,7 @@ abstract contract Vest is Owned {
 
     function setReceiver(uint256 id, address receiver) external {
         if (msg.sender != _vestings[id].receiver) revert OnlyReceiver();
-        if (receiver == address(0)) revert InvalidReceiver();
+        if (receiver == address(0)) revert AddressIsZero();
         _vestings[id].receiver = receiver;
         emit ReceiverSet(id, receiver);
     }
