@@ -12,10 +12,10 @@ abstract contract Vest is Owned {
     error PermissionDenied();
     error OnlyReceiver();
     error AddressIsZero();
-    error InvalidTotal();
+    error TotalIsZero();
     error StartTooFar();
     error StartTooLongAgo();
-    error InvalidDuration();
+    error DurationIsZero();
     error DurationTooLong();
     error CliffTooLong();
     error InvalidVestingId();
@@ -87,10 +87,10 @@ abstract contract Vest is Owned {
         uint256 total
     ) external onlyOwner returns (uint256 id) {
         if (receiver == address(0)) revert AddressIsZero();
-        if (total == 0) revert InvalidTotal();
+        if (total == 0) revert TotalIsZero();
         if (start > block.timestamp + _TWENTY_YEARS) revert StartTooFar();
         if (start < block.timestamp - _TWENTY_YEARS) revert StartTooLongAgo();
-        if (duration == 0) revert InvalidDuration();
+        if (duration == 0) revert DurationIsZero();
         if (duration > _TWENTY_YEARS) revert DurationTooLong();
         if (cliff > _TWENTY_YEARS) revert CliffTooLong();
 
