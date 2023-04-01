@@ -13,22 +13,34 @@ contract MockVest is Vest {
         _token = token;
     }
 
+    function validateId(uint256 id) external {
+        _validateId(id);
+    }
+
     function _transfer(address receiver, uint256 amount) internal override {
         // Manipulate the state.
     }
 }
 
 contract VestTest is Test {
+    using stdStorage for StdStorage;
+
     event VestingCreated(uint256 id, address receiver);
 
+    uint256 internal immutable START;
     uint256 internal constant TWENTY_YEARS = 20 * 365 days;
     uint256 internal constant OFFSET = 1000;
+    uint256 internal constant DURATION = 3 * 365 days;
 
     MockVest internal vest;
     ERC20 internal token;
 
-    address receiver = address(0x1);
-    address manager = address(0x2);
+    address alice = address(0x1);
+    address bob = address(0x2);
+
+    constructor() {
+        START = block.timestamp + 30 days;
+    }
 
     function setUp() public {
         token = new MockERC20("Test", "TST", 18);
@@ -230,5 +242,26 @@ contract VestTest is Test {
 
         vm.expectRevert(Vest.CliffTooLong.selector);
         vest.create(receiver, start, cliff, duration, manager, restricted, protected, total);
+    }
+
+    function testValidateId(uint256 ids, uint256 id) public {
+        ids = bound(ids, 1, type(uint256).max);
+        id = bound(id, 0, ids - 1);
+        stdstore.target(address(vest)).sig("ids()").checked_write(ids);
+
+        vest.validateId(id);
+    }
+
+    function testValidateIdShouldRevertIfIdStrictlySuperiorToIds(uint256 ids, uint256 id) public {
+        ids = bound(ids, 0, type(uint256).max - 1);
+        id = bound(id, ids + 1, type(uint256).max);
+        stdstore.target(address(vest)).sig("ids()").checked_write(ids);
+
+        vm.expectRevert(Vest.InvalidVestingId.selector);
+        vest.validateId(id);
+    }
+
+    function _createVest() internal {
+        vest.create(alice, START, 0, DURATION, address(0), false, false, 1000);
     }
 }
