@@ -6,19 +6,21 @@ import "forge-std/StdStorage.sol";
 import "solmate/test/utils/mocks/MockERC20.sol";
 import "../src/Vest.sol";
 
-contract MockVest is Vest {
+contract MockVest is Vest, Test {
+    using stdStorage for StdStorage;
+
     address internal immutable _token;
 
     constructor(address token) Vest() {
         _token = token;
     }
 
-    function validateId(uint256 id) external {
+    function validateId(uint256 id) external view {
         _validateId(id);
     }
 
     function _transfer(address receiver, uint256 amount) internal override {
-        // Manipulate the state.
+        stdstore.target(_token).sig("balanceOf(address)").with_key(receiver).checked_write(amount);
     }
 }
 
@@ -261,7 +263,187 @@ contract VestTest is Test {
         vest.validateId(id);
     }
 
-    function _createVest() internal {
-        vest.create(alice, START, 0, DURATION, address(0), false, false, 1000);
+    function testClaimShouldFailWhenCalledByNotReceiverAndNoManagerSet(
+        address caller,
+        address receiver,
+        uint256 start,
+        uint256 cliff,
+        uint256 duration,
+        address manager,
+        bool restricted,
+        bool protected,
+        uint256 total
+    ) public {
+        vm.assume(receiver != address(0));
+        vm.assume(caller != receiver);
+        vm.assume(caller != manager);
+        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        cliff = bound(cliff, 0, TWENTY_YEARS);
+        duration = bound(duration, 1, TWENTY_YEARS);
+        total = bound(total, 1, type(uint128).max);
+
+        uint256 id = vest.create(receiver, start, cliff, duration, manager, restricted, protected, total);
+
+        vm.prank(caller);
+        vm.expectRevert(Vest.PermissionDenied.selector);
+        vest.claim(id);
+    }
+
+    function testClaimShouldFailWhenCalledByNotReceiverAndNotManagerButManagerSet(
+        address caller,
+        address receiver,
+        uint256 start,
+        uint256 cliff,
+        uint256 duration,
+        address manager,
+        bool restricted,
+        bool protected,
+        uint256 total
+    ) public {
+        vm.assume(receiver != address(0));
+        vm.assume(caller != receiver);
+        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        cliff = bound(cliff, 0, TWENTY_YEARS);
+        duration = bound(duration, 1, TWENTY_YEARS);
+        total = bound(total, 1, type(uint128).max);
+
+        uint256 id = vest.create(receiver, start, cliff, duration, manager, restricted, protected, total);
+
+        vm.prank(caller);
+        vm.expectRevert(Vest.PermissionDenied.selector);
+        vest.claim(id);
+    }
+
+    function testClaimShouldFailWhenCalledByRestrictedManager(
+        address receiver,
+        uint256 start,
+        uint256 cliff,
+        uint256 duration,
+        address manager,
+        bool protected,
+        uint256 total
+    ) public {
+        vm.assume(receiver != address(0));
+        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        cliff = bound(cliff, 0, TWENTY_YEARS);
+        duration = bound(duration, 1, TWENTY_YEARS);
+        total = bound(total, 1, type(uint128).max);
+
+        uint256 id = vest.create(receiver, start, cliff, duration, manager, true, protected, total);
+
+        vm.prank(manager);
+        vm.expectRevert(Vest.PermissionDenied.selector);
+        vest.claim(id);
+    }
+
+    function testClaimCalledByReceiver(
+        address receiver,
+        uint256 start,
+        uint256 cliff,
+        uint256 duration,
+        address manager,
+        bool restricted,
+        bool protected,
+        uint256 total
+    ) public {
+        vm.assume(receiver != address(0));
+
+        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        cliff = bound(cliff, 0, TWENTY_YEARS);
+        duration = bound(duration, 1, TWENTY_YEARS);
+        total = bound(total, 1, type(uint128).max);
+
+        uint256 id = vest.create(receiver, start, cliff, duration, manager, restricted, protected, total);
+
+        vm.prank(receiver);
+        vest.claim(id);
+    }
+
+    function testClaimCalledByManagerNotRestricted(
+        address receiver,
+        uint256 start,
+        uint256 cliff,
+        uint256 duration,
+        address manager,
+        bool protected,
+        uint256 total
+    ) public {
+        vm.assume(receiver != address(0));
+
+        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        cliff = bound(cliff, 0, TWENTY_YEARS);
+        duration = bound(duration, 1, TWENTY_YEARS);
+        total = bound(total, 1, type(uint128).max);
+
+        uint256 id = vest.create(receiver, start, cliff, duration, manager, false, protected, total);
+
+        vm.prank(manager);
+        vest.claim(id);
+    }
+
+    function testSetReceiver(address receiver) public {
+        vm.assume(receiver != address(0));
+
+        uint256 id = _createVest();
+
+        vm.prank(alice);
+        vest.setReceiver(id, receiver);
+
+        Vest.Vesting memory vesting = vest.getVesting(id);
+
+        assertEq(vesting.receiver, receiver);
+    }
+
+    function testSetReceiverShouldFailWhenAddressZero() public {
+        uint256 id = _createVest();
+
+        vm.prank(alice);
+        vm.expectRevert(Vest.AddressIsZero.selector);
+        vest.setReceiver(id, address(0));
+    }
+
+    function testSetReceiverShouldFailWhenCalledByNotReceiver(address caller, address receiver) public {
+        vm.assume(caller != alice);
+        vm.assume(receiver != address(0));
+
+        uint256 id = _createVest();
+
+        vm.prank(caller);
+        vm.expectRevert(Vest.OnlyReceiver.selector);
+        vest.setReceiver(id, address(0));
+    }
+
+    function testClaimBeforeStart(
+        address receiver,
+        uint256 start,
+        uint256 cliff,
+        uint256 duration,
+        address manager,
+        bool restricted,
+        bool protected,
+        uint256 total,
+        uint256 claimTime
+    ) public {
+        vm.assume(receiver != address(0));
+        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        claimTime = bound(claimTime, 0, start - 1);
+        cliff = bound(cliff, 0, TWENTY_YEARS);
+        duration = bound(duration, 1, TWENTY_YEARS);
+        total = bound(total, 1, type(uint128).max);
+
+        uint256 id = vest.create(receiver, start, cliff, duration, manager, restricted, protected, total);
+
+        vm.warp(claimTime);
+
+        vm.prank(receiver);
+        vest.claim(id);
+
+        Vest.Vesting memory vesting = vest.getVesting(id);
+
+        assertEq(vesting.claimed, 0);
+    }
+
+    function _createVest() internal returns (uint256 id) {
+        id = vest.create(alice, START, 0, DURATION, address(0), false, false, 1000);
     }
 }
