@@ -124,7 +124,7 @@ abstract contract Vest is Owned {
 
     function claim(uint256 id) external {
         Vesting storage vesting = _vestings[id];
-        if (msg.sender != vesting.receiver || (!vesting.restricted && msg.sender != vesting.manager)) {
+        if (msg.sender != vesting.receiver && (vesting.restricted || msg.sender != vesting.manager)) {
             revert PermissionDenied();
         }
         uint256 amount = _unclaimed(id);
