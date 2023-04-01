@@ -62,6 +62,10 @@ abstract contract Vest is Owned {
         return _TWENTY_YEARS;
     }
 
+    function ids() external view returns (uint256) {
+        return _ids;
+    }
+
     function getVesting(uint256 id) external view returns (Vesting memory) {
         return _vestings[id];
     }
