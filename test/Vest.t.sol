@@ -28,6 +28,8 @@ contract VestTest is Test {
     using stdStorage for StdStorage;
 
     event VestingCreated(uint256 id, address receiver);
+    event VestingProtected(uint256 id);
+    event VestingUnprotected(uint256 id);
 
     uint256 internal immutable START;
     uint256 internal constant TWENTY_YEARS = 20 * 365 days;
@@ -71,7 +73,7 @@ contract VestTest is Test {
         duration = bound(duration, 1, TWENTY_YEARS);
         total = bound(total, 1, type(uint128).max);
 
-        vm.expectEmit();
+        vm.expectEmit(true, true, true, true);
         emit VestingCreated(1, receiver);
         uint256 id = vest.create(receiver, start, cliff, duration, manager, restricted, protected, total);
 
@@ -411,6 +413,70 @@ contract VestTest is Test {
         vm.prank(caller);
         vm.expectRevert(Vest.OnlyReceiver.selector);
         vest.setReceiver(id, address(0));
+    }
+
+    function testProtect() public {
+        uint256 id = _createVest();
+
+        vm.expectEmit(true, true, true, true);
+        emit VestingProtected(id);
+
+        vest.protect(id);
+
+        Vest.Vesting memory vesting = vest.getVesting(id);
+
+        assertTrue(vesting.protected);
+    }
+
+    function testProtectShouldFailWhenCalledByNotOwner(address caller) public {
+        vm.assume(caller != vest.owner());
+
+        uint256 id = _createVest();
+
+        vm.prank(caller);
+        vm.expectRevert("UNAUTHORIZED");
+        vest.protect(id);
+    }
+
+    function testProtectShouldFailWhenInvalidId(uint256 id) public {
+        id = bound(id, 2, type(uint256).max);
+
+        _createVest();
+
+        vm.expectRevert(Vest.InvalidVestingId.selector);
+        vest.protect(id);
+    }
+
+    function testUnprotect() public {
+        uint256 id = _createVest();
+
+        vm.expectEmit(true, true, true, true);
+        emit VestingUnprotected(id);
+
+        vest.unprotect(id);
+
+        Vest.Vesting memory vesting = vest.getVesting(id);
+
+        assertFalse(vesting.protected);
+    }
+
+    function testUnrotectShouldFailWhenCalledByNotOwner(address caller) public {
+        vm.assume(caller != vest.owner());
+
+        uint256 id = _createVest();
+
+        vm.prank(caller);
+        vm.expectRevert("UNAUTHORIZED");
+        vest.unprotect(id);
+    }
+
+    function testUnprotectShouldFailWhenInvalidId(uint256 id) public {
+        id = bound(id, 2, type(uint256).max);
+
+        _createVest();
+
+        vm.expectRevert(Vest.InvalidVestingId.selector);
+        vest.unprotect(id);
     }
 
     function testClaimBeforeStart(
