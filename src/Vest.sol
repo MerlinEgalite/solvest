@@ -27,6 +27,8 @@ abstract contract Vest is Owned {
     event Claimed(uint256 id, uint256 amount);
     event VestingProtected(uint256 id);
     event VestingUnprotected(uint256 id);
+    event VestingRestricted(uint256 id);
+    event VestingUnrestricted(uint256 id);
     event ReceiverSet(uint256 id, address receiver);
 
     /* STRCUTS */
@@ -147,14 +149,16 @@ abstract contract Vest is Owned {
 
     function restrict(uint256 id) external {
         _validateId(id);
-        if (msg.sender != _vestings[id].receiver || msg.sender != owner) revert PermissionDenied();
+        if (msg.sender != _vestings[id].receiver && msg.sender != owner) revert PermissionDenied();
         _vestings[id].restricted = true;
+        emit VestingRestricted(id);
     }
 
     function unrestrict(uint256 id) external {
         _validateId(id);
-        if (msg.sender != _vestings[id].receiver || msg.sender != owner) revert PermissionDenied();
+        if (msg.sender != _vestings[id].receiver && msg.sender != owner) revert PermissionDenied();
         _vestings[id].restricted = false;
+        emit VestingUnrestricted(id);
     }
 
     function setReceiver(uint256 id, address receiver) external {
