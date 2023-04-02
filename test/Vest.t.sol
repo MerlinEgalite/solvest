@@ -28,8 +28,13 @@ contract VestTest is Test {
     using stdStorage for StdStorage;
 
     event VestingCreated(uint256 id, address receiver);
+    event VestingRevoked(uint256 id, uint256 end);
+    event Claimed(uint256 id, uint256 amount);
     event VestingProtected(uint256 id);
     event VestingUnprotected(uint256 id);
+    event VestingRestricted(uint256 id);
+    event VestingUnrestricted(uint256 id);
+    event ReceiverSet(uint256 id, address receiver);
 
     uint256 internal immutable START;
     uint256 internal constant TWENTY_YEARS = 20 * 365 days;
@@ -477,6 +482,100 @@ contract VestTest is Test {
 
         vm.expectRevert(Vest.InvalidVestingId.selector);
         vest.unprotect(id);
+    }
+
+    function testRestrictCalledByOwner() public {
+        uint256 id = _createVest();
+
+        vm.expectEmit(true, true, true, true);
+        emit VestingRestricted(id);
+
+        vest.restrict(id);
+
+        Vest.Vesting memory vesting = vest.getVesting(id);
+
+        assertTrue(vesting.restricted);
+    }
+
+    function testRestrictCalledByReceiver() public {
+        uint256 id = _createVest();
+
+        vm.expectEmit(true, true, true, true);
+        emit VestingRestricted(id);
+
+        vm.prank(alice);
+        vest.restrict(id);
+
+        Vest.Vesting memory vesting = vest.getVesting(id);
+
+        assertTrue(vesting.restricted);
+    }
+
+    function testRestrictShouldFailWhenCalledByNotOwnerNorReceiver(address caller) public {
+        vm.assume(caller != vest.owner());
+        vm.assume(caller != alice);
+
+        uint256 id = _createVest();
+
+        vm.prank(caller);
+        vm.expectRevert(Vest.PermissionDenied.selector);
+        vest.restrict(id);
+    }
+
+    function testRestrictShouldFailWhenInvalidId(uint256 id) public {
+        id = bound(id, 2, type(uint256).max);
+
+        _createVest();
+
+        vm.expectRevert(Vest.InvalidVestingId.selector);
+        vest.restrict(id);
+    }
+
+    function testUnrestrictCalledByOwner() public {
+        uint256 id = _createVest();
+
+        vm.expectEmit(true, true, true, true);
+        emit VestingUnrestricted(id);
+
+        vest.unrestrict(id);
+
+        Vest.Vesting memory vesting = vest.getVesting(id);
+
+        assertFalse(vesting.restricted);
+    }
+
+    function testUnrestrictCalledByReceiver() public {
+        uint256 id = _createVest();
+
+        vm.expectEmit(true, true, true, true);
+        emit VestingUnrestricted(id);
+
+        vm.prank(alice);
+        vest.unrestrict(id);
+
+        Vest.Vesting memory vesting = vest.getVesting(id);
+
+        assertFalse(vesting.restricted);
+    }
+
+    function testUnrestrictShouldFailWhenCalledByNotOwnerNorReceiver(address caller) public {
+        vm.assume(caller != vest.owner());
+        vm.assume(caller != alice);
+
+        uint256 id = _createVest();
+
+        vm.prank(caller);
+        vm.expectRevert(Vest.PermissionDenied.selector);
+        vest.unrestrict(id);
+    }
+
+    function testUnrestrictShouldFailWhenInvalidId(uint256 id) public {
+        id = bound(id, 2, type(uint256).max);
+
+        _createVest();
+
+        vm.expectRevert(Vest.InvalidVestingId.selector);
+        vest.unrestrict(id);
     }
 
     function testClaimBeforeStart(
