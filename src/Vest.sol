@@ -72,11 +72,7 @@ abstract contract Vest is Owned {
         return _vestings[id];
     }
 
-    function getAccrued(uint256 time, uint256 start, uint256 end, uint256 total)
-        external
-        pure
-        returns (uint256)
-    {
+    function getAccrued(uint256 time, uint256 start, uint256 end, uint256 total) external pure returns (uint256) {
         return _accrued(time, start, end, total);
     }
 
@@ -176,15 +172,12 @@ abstract contract Vest is Owned {
 
     function _unclaimed(uint256 id) internal view returns (uint256) {
         Vesting storage vesting = _vestings[id];
-        uint256 accrued = block.timestamp < vesting.cliff ? 0 : _accrued(block.timestamp, vesting.start, vesting.end, vesting.total);
+        uint256 accrued =
+            block.timestamp < vesting.cliff ? 0 : _accrued(block.timestamp, vesting.start, vesting.end, vesting.total);
         return accrued - vesting.claimed;
     }
 
-    function _accrued(uint256 time, uint256 start, uint256 end, uint256 total)
-        internal
-        pure
-        returns (uint256)
-    {
+    function _accrued(uint256 time, uint256 start, uint256 end, uint256 total) internal pure returns (uint256) {
         if (time < start) return 0;
         if (time >= end) return total;
         uint256 delta = time - start;
