@@ -19,6 +19,10 @@ contract MockVest is Vest, Test {
         _validateId(id);
     }
 
+    function unclaimed(uint256 id) external view returns (uint256) {
+        return _unclaimed(id);
+    }
+
     function _transfer(address receiver, uint256 amount) internal override {
         stdstore.target(_token).sig("balanceOf(address)").with_key(receiver).checked_write(amount);
     }
@@ -331,6 +335,7 @@ contract VestTest is Test {
         uint256 total
     ) public {
         vm.assume(receiver != address(0));
+        vm.assume(manager != receiver);
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
         cliff = bound(cliff, 0, TWENTY_YEARS);
         duration = bound(duration, 1, TWENTY_YEARS);
@@ -606,6 +611,73 @@ contract VestTest is Test {
         Vest.Vesting memory vesting = vest.getVesting(id);
 
         assertEq(vesting.claimed, 0);
+    }
+
+    function testAccruedWithTimeBeforeStart(uint256 time, uint256 start, uint256 end, uint256 total) public {
+        start = bound(start, 1, type(uint256).max);
+        time = bound(time, 0, start - 1);
+
+        assertEq(vest.getAccrued(time, start, end, total), 0);
+    }
+
+    function testAccruedWithTimeAfterEnd(uint256 time, uint256 start, uint256 end, uint256 total) public {
+        start = bound(start, 0, type(uint256).max - 1);
+        end = bound(end, start + 1, type(uint256).max);
+        time = bound(time, end, type(uint256).max);
+
+        assertEq(vest.getAccrued(time, start, end, total), total);
+    }
+
+    function testAccrued(uint256 time, uint256 start, uint256 end, uint256 total) public {
+        start = bound(start, 0, type(uint128).max - 1);
+        end = bound(end, start + 1, type(uint128).max);
+        time = bound(time, start + 1, end);
+        total = bound(total, 0, type(uint128).max);
+
+        uint256 expected = total * (time - start) / (end - start);
+
+        assertEq(vest.getAccrued(time, start, end, total), expected);
+    }
+
+    function testUnclaimedBeforeCliff(uint256 time, uint256 start, uint256 cliff, uint256 duration, uint256 total) public {
+        total = bound(total, 1, type(uint128).max);
+        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        cliff = bound(cliff, 0, TWENTY_YEARS);
+        duration = bound(duration, 1, TWENTY_YEARS);
+        time = bound(time, 0, start + cliff - 1);
+
+        uint256 id = vest.create(alice, start, cliff, duration, address(0), false, false, total);
+
+        vm.warp(time);
+
+        uint256 unclaimed = vest.getUnclaimed(id);
+
+        assertEq(unclaimed, 0);
+    }
+
+    function testUnclaimedAfterCliff(uint256 timeClaim, uint256 timeUnclaimed, uint256 start, uint256 cliff, uint256 duration, uint256 total) public {
+        total = bound(total, 1000, type(uint128).max);
+        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        cliff = bound(cliff, 0, TWENTY_YEARS);
+        duration = bound(duration, OFFSET, TWENTY_YEARS);
+        timeClaim = bound(timeClaim, start + cliff, type(uint96).max);
+        timeUnclaimed = bound(timeUnclaimed, timeClaim + 1, type(uint128).max);
+
+        uint256 id = vest.create(alice, start, cliff, duration, address(0), false, false, total);
+
+        vm.warp(timeClaim);
+
+        vm.prank(alice);
+        vest.claim(id);
+        uint256 claimedBefore = vest.getVesting(id).claimed;
+
+        vm.warp(timeUnclaimed);
+
+        uint256 accrued = vest.getAccrued(block.timestamp, start, start + duration, total);
+        uint256 expectedUnclaimed = accrued - claimedBefore;
+        uint256 unclaimed = vest.getUnclaimed(id);
+
+        assertApproxEqAbs(unclaimed, expectedUnclaimed, 1);
     }
 
     function _createVest() internal returns (uint256 id) {
