@@ -583,7 +583,7 @@ contract VestTest is Test {
         vest.unrestrict(id);
     }
 
-    function testClaimBeforeStart(
+    function testClaimBeforeCliff(
         address receiver,
         uint256 start,
         uint256 cliff,
@@ -596,8 +596,8 @@ contract VestTest is Test {
     ) public {
         vm.assume(receiver != address(0));
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
-        claimTime = bound(claimTime, 0, start - 1);
         cliff = bound(cliff, 0, TWENTY_YEARS);
+        claimTime = bound(claimTime, 0, start + cliff - 1);
         duration = bound(duration, 1, TWENTY_YEARS);
         total = bound(total, 1, type(uint128).max);
 
@@ -611,6 +611,37 @@ contract VestTest is Test {
         Vest.Vesting memory vesting = vest.getVesting(id);
 
         assertEq(vesting.claimed, 0);
+    }
+
+    function testClaimAfterCliff(
+        address receiver,
+        uint256 start,
+        uint256 cliff,
+        uint256 duration,
+        address manager,
+        bool restricted,
+        bool protected,
+        uint256 total,
+        uint256 claimTime
+    ) public {
+        vm.assume(receiver != address(0));
+        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        cliff = bound(cliff, 0, TWENTY_YEARS);
+        duration = bound(duration, OFFSET, TWENTY_YEARS);
+        claimTime = bound(claimTime, start + cliff, type(uint128).max);
+        total = bound(total, 1000, type(uint128).max);
+
+        uint256 id = vest.create(receiver, start, cliff, duration, manager, restricted, protected, total);
+
+        vm.warp(claimTime);
+
+        vm.prank(receiver);
+        vest.claim(id);
+        uint256 accrued = vest.getAccrued(block.timestamp, start, start + duration, total);
+
+        Vest.Vesting memory vesting = vest.getVesting(id);
+
+        assertEq(vesting.claimed, accrued);
     }
 
     function testAccruedWithTimeBeforeStart(uint256 time, uint256 start, uint256 end, uint256 total) public {
@@ -678,6 +709,23 @@ contract VestTest is Test {
         uint256 unclaimed = vest.getUnclaimed(id);
 
         assertApproxEqAbs(unclaimed, expectedUnclaimed, 1);
+    }
+
+    function invariantDeadlines() public {
+        Vest.Vesting memory vesting = vest.getVesting(0);
+        assertLe(vesting.start, vesting.cliff);
+        assertLe(vesting.start, vesting.end);
+    }
+
+    function invariantClaimed() public {
+        Vest.Vesting memory vesting = vest.getVesting(0);
+        assertLe(vesting.claimed, vesting.total);
+    }
+
+    function invariantUnclaimed() public {
+        Vest.Vesting memory vesting = vest.getVesting(0);
+        uint256 unclaimed = vest.getUnclaimed(0);
+        assertLe(unclaimed, vesting.total);
     }
 
     function _createVest() internal returns (uint256 id) {
