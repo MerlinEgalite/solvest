@@ -98,7 +98,7 @@ abstract contract Vest is Owned {
         if (start < block.timestamp - _TWENTY_YEARS) revert StartTooLongAgo();
         if (duration == 0) revert DurationIsZero();
         if (duration > _TWENTY_YEARS) revert DurationTooLong();
-        if (cliff > _TWENTY_YEARS) revert CliffTooLong();
+        if (cliff > duration) revert CliffTooLong();
 
         id = ++_ids;
         _vestings[id] = Vesting({

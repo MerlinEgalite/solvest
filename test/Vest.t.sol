@@ -78,8 +78,8 @@ contract VestTest is Test {
     ) public {
         vm.assume(receiver != address(0));
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
-        cliff = bound(cliff, 0, TWENTY_YEARS);
         duration = bound(duration, 1, TWENTY_YEARS);
+        cliff = bound(cliff, 0, duration);
         total = bound(total, 1, type(uint128).max);
 
         vm.expectEmit(true, true, true, true);
@@ -289,8 +289,8 @@ contract VestTest is Test {
         vm.assume(caller != receiver);
         vm.assume(caller != manager);
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
-        cliff = bound(cliff, 0, TWENTY_YEARS);
         duration = bound(duration, 1, TWENTY_YEARS);
+        cliff = bound(cliff, 0, duration);
         total = bound(total, 1, type(uint128).max);
 
         uint256 id = vest.create(receiver, start, cliff, duration, manager, restricted, protected, total);
@@ -314,8 +314,8 @@ contract VestTest is Test {
         vm.assume(receiver != address(0));
         vm.assume(caller != receiver);
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
-        cliff = bound(cliff, 0, TWENTY_YEARS);
         duration = bound(duration, 1, TWENTY_YEARS);
+        cliff = bound(cliff, 0, duration);
         total = bound(total, 1, type(uint128).max);
 
         uint256 id = vest.create(receiver, start, cliff, duration, manager, restricted, protected, total);
@@ -337,8 +337,8 @@ contract VestTest is Test {
         vm.assume(receiver != address(0));
         vm.assume(manager != receiver);
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
-        cliff = bound(cliff, 0, TWENTY_YEARS);
         duration = bound(duration, 1, TWENTY_YEARS);
+        cliff = bound(cliff, 0, duration);
         total = bound(total, 1, type(uint128).max);
 
         uint256 id = vest.create(receiver, start, cliff, duration, manager, true, protected, total);
@@ -361,8 +361,8 @@ contract VestTest is Test {
         vm.assume(receiver != address(0));
 
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
-        cliff = bound(cliff, 0, TWENTY_YEARS);
         duration = bound(duration, 1, TWENTY_YEARS);
+        cliff = bound(cliff, 0, duration);
         total = bound(total, 1, type(uint128).max);
 
         uint256 id = vest.create(receiver, start, cliff, duration, manager, restricted, protected, total);
@@ -383,8 +383,8 @@ contract VestTest is Test {
         vm.assume(receiver != address(0));
 
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
-        cliff = bound(cliff, 0, TWENTY_YEARS);
         duration = bound(duration, 1, TWENTY_YEARS);
+        cliff = bound(cliff, 0, duration);
         total = bound(total, 1, type(uint128).max);
 
         uint256 id = vest.create(receiver, start, cliff, duration, manager, false, protected, total);
@@ -596,9 +596,9 @@ contract VestTest is Test {
     ) public {
         vm.assume(receiver != address(0));
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
-        cliff = bound(cliff, 0, TWENTY_YEARS);
-        claimTime = bound(claimTime, 0, start + cliff - 1);
         duration = bound(duration, 1, TWENTY_YEARS);
+        cliff = bound(cliff, 0, duration);
+        claimTime = bound(claimTime, 0, start + cliff - 1);
         total = bound(total, 1, type(uint128).max);
 
         uint256 id = vest.create(receiver, start, cliff, duration, manager, restricted, protected, total);
@@ -626,8 +626,8 @@ contract VestTest is Test {
     ) public {
         vm.assume(receiver != address(0));
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
-        cliff = bound(cliff, 0, TWENTY_YEARS);
         duration = bound(duration, OFFSET, TWENTY_YEARS);
+        cliff = bound(cliff, 0, duration);
         claimTime = bound(claimTime, start + cliff, type(uint128).max);
         total = bound(total, 1000, type(uint128).max);
 
@@ -673,8 +673,8 @@ contract VestTest is Test {
     function testUnclaimedBeforeCliff(uint256 time, uint256 start, uint256 cliff, uint256 duration, uint256 total) public {
         total = bound(total, 1, type(uint128).max);
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
-        cliff = bound(cliff, 0, TWENTY_YEARS);
         duration = bound(duration, 1, TWENTY_YEARS);
+        cliff = bound(cliff, 0, duration);
         time = bound(time, 0, start + cliff - 1);
 
         uint256 id = vest.create(alice, start, cliff, duration, address(0), false, false, total);
@@ -689,8 +689,8 @@ contract VestTest is Test {
     function testUnclaimedAfterCliff(uint256 timeClaim, uint256 timeUnclaimed, uint256 start, uint256 cliff, uint256 duration, uint256 total) public {
         total = bound(total, 1000, type(uint128).max);
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
-        cliff = bound(cliff, 0, TWENTY_YEARS);
         duration = bound(duration, OFFSET, TWENTY_YEARS);
+        cliff = bound(cliff, 0, duration);
         timeClaim = bound(timeClaim, start + cliff, type(uint96).max);
         timeUnclaimed = bound(timeUnclaimed, timeClaim + 1, type(uint128).max);
 
@@ -709,6 +709,45 @@ contract VestTest is Test {
         uint256 unclaimed = vest.getUnclaimed(id);
 
         assertApproxEqAbs(unclaimed, expectedUnclaimed, 1);
+    }
+
+    function testRevokeShouldRevertWhenCalledByNotOwner(address caller, uint256 id) public {
+        vm.assume(caller != address(this));
+
+        vm.expectRevert("UNAUTHORIZED");
+        vm.prank(caller);
+        vest.revoke(id);
+    }
+
+    function testRevokeBeforeStart(uint256 time, uint256 start, uint256 cliff, uint256 duration, uint256 total) public {
+        total = bound(total, 1, type(uint128).max);
+        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        duration = bound(duration, 1, TWENTY_YEARS);
+        cliff = bound(cliff, 0, duration);
+        time = bound(time, 0, start - 1);
+
+        uint256 id = vest.create(alice, start, cliff, duration, address(0), false, false, total);
+
+        vest.revoke(id, time);
+
+        Vest.Vesting memory vesting = vest.getVesting(id);
+
+
+    }
+
+    function testRevokeBeforeCliff() public {
+    }
+
+    function testrevokeAfterEnd() public {
+
+    }
+
+    function testRevokeAfterCliffAndBeforeEnd() public {
+        
+    }
+
+    function testRevokeAfterEnd() public {
+
     }
 
     function invariantDeadlines() public {
