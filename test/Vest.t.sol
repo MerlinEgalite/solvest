@@ -42,7 +42,8 @@ contract VestTest is Test {
 
     uint256 internal immutable START;
     uint256 internal constant TWENTY_YEARS = 20 * 365 days;
-    uint256 internal constant OFFSET = 1000;
+    uint256 internal constant OFFSET = 1_000;
+    uint256 internal constant TOTAL = 1_000;
     uint256 internal constant DURATION = 3 * 365 days;
 
     MockVest internal vest;
@@ -629,7 +630,7 @@ contract VestTest is Test {
         duration = bound(duration, OFFSET, TWENTY_YEARS);
         cliff = bound(cliff, 0, duration);
         claimTime = bound(claimTime, start + cliff, type(uint128).max);
-        total = bound(total, 1000, type(uint128).max);
+        total = bound(total, TOTAL, type(uint128).max);
 
         uint256 id = vest.create(receiver, start, cliff, duration, manager, restricted, protected, total);
 
@@ -670,7 +671,9 @@ contract VestTest is Test {
         assertEq(vest.getAccrued(time, start, end, total), expected);
     }
 
-    function testUnclaimedBeforeCliff(uint256 time, uint256 start, uint256 cliff, uint256 duration, uint256 total) public {
+    function testUnclaimedBeforeCliff(uint256 time, uint256 start, uint256 cliff, uint256 duration, uint256 total)
+        public
+    {
         total = bound(total, 1, type(uint128).max);
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
         duration = bound(duration, 1, TWENTY_YEARS);
@@ -686,8 +689,15 @@ contract VestTest is Test {
         assertEq(unclaimed, 0);
     }
 
-    function testUnclaimedAfterCliff(uint256 timeClaim, uint256 timeUnclaimed, uint256 start, uint256 cliff, uint256 duration, uint256 total) public {
-        total = bound(total, 1000, type(uint128).max);
+    function testUnclaimedAfterCliff(
+        uint256 timeClaim,
+        uint256 timeUnclaimed,
+        uint256 start,
+        uint256 cliff,
+        uint256 duration,
+        uint256 total
+    ) public {
+        total = bound(total, TOTAL, type(uint128).max);
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
         duration = bound(duration, OFFSET, TWENTY_YEARS);
         cliff = bound(cliff, 0, duration);
@@ -719,35 +729,117 @@ contract VestTest is Test {
         vest.revoke(id);
     }
 
-    function testRevokeBeforeStart(uint256 time, uint256 start, uint256 cliff, uint256 duration, uint256 total) public {
-        total = bound(total, 1, type(uint128).max);
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
-        duration = bound(duration, 1, TWENTY_YEARS);
+    function testRevokeBeforeStart(uint256 end, uint256 start, uint256 cliff, uint256 duration, uint256 total) public {
+        total = bound(total, TOTAL, type(uint128).max);
+        start = bound(start, block.timestamp, block.timestamp + TWENTY_YEARS);
+        duration = bound(duration, OFFSET, TWENTY_YEARS);
         cliff = bound(cliff, 0, duration);
-        time = bound(time, 0, start - 1);
+        end = bound(end, 0, start - 1);
 
         uint256 id = vest.create(alice, start, cliff, duration, address(0), false, false, total);
 
-        vest.revoke(id, time);
+        vest.revoke(id, end);
+
+        end = end < block.timestamp ? block.timestamp : end;
 
         Vest.Vesting memory vesting = vest.getVesting(id);
 
-
+        assertEq(vesting.start, end, "start");
+        assertEq(vesting.end, end, "end");
+        assertEq(vesting.total, 0, "total");
     }
 
-    function testRevokeBeforeCliff() public {
+    function testRevokeBeforeCliff(uint256 end, uint256 start, uint256 cliff, uint256 duration, uint256 total) public {
+        total = bound(total, TOTAL, type(uint128).max);
+        start = bound(start, block.timestamp, block.timestamp + TWENTY_YEARS);
+        duration = bound(duration, OFFSET, TWENTY_YEARS);
+        cliff = bound(cliff, OFFSET, duration);
+        end = bound(end, start, start + cliff - 1);
+
+        uint256 id = vest.create(alice, start, cliff, duration, address(0), false, false, total);
+
+        vest.revoke(id, end);
+
+        end = end < block.timestamp ? block.timestamp : end;
+
+        Vest.Vesting memory vesting = vest.getVesting(id);
+
+        assertEq(vesting.start, start, "start");
+        assertEq(vesting.end, end, "end");
+        assertEq(vesting.total, 0, "total");
     }
 
-    function testrevokeAfterEnd() public {
+    function testRevokeAfterEnd(uint256 end, uint256 start, uint256 cliff, uint256 duration, uint256 total) public {
+        total = bound(total, TOTAL, type(uint128).max);
+        start = bound(start, block.timestamp, block.timestamp + TWENTY_YEARS);
+        duration = bound(duration, OFFSET, TWENTY_YEARS);
+        cliff = bound(cliff, 0, duration);
+        end = bound(end, start + duration, type(uint256).max);
 
+        uint256 id = vest.create(alice, start, cliff, duration, address(0), false, false, total);
+
+        Vest.Vesting memory vestingBefore = vest.getVesting(id);
+
+        vest.revoke(id, end);
+
+        end = end < block.timestamp ? block.timestamp : end;
+
+        Vest.Vesting memory vestingAfter = vest.getVesting(id);
+
+        assertEq(vestingAfter.start, vestingBefore.start, "start");
+        assertEq(vestingAfter.end, vestingBefore.end, "end");
+        assertEq(vestingAfter.total, vestingBefore.total, "total");
     }
 
-    function testRevokeAfterCliffAndBeforeEnd() public {
-        
+    function testRevokeAfterCliffAndBeforeEnd(
+        uint256 end,
+        uint256 start,
+        uint256 cliff,
+        uint256 duration,
+        uint256 total
+    ) public {
+        total = bound(total, TOTAL, type(uint128).max);
+        start = bound(start, block.timestamp, block.timestamp + TWENTY_YEARS);
+        duration = bound(duration, OFFSET, TWENTY_YEARS);
+        cliff = bound(cliff, 0, duration - 1);
+        end = bound(end, start + cliff, start + duration - 1);
+
+        uint256 id = vest.create(alice, start, cliff, duration, address(0), false, false, total);
+
+        Vest.Vesting memory vestingBefore = vest.getVesting(id);
+
+        vest.revoke(id, end);
+
+        end = end < block.timestamp ? block.timestamp : end;
+        uint256 expectedTotal = vest.getAccrued(vestingBefore.end, start, end, total);
+
+        Vest.Vesting memory vestingAfter = vest.getVesting(id);
+
+        assertEq(vestingAfter.start, vestingBefore.start, "start");
+        assertEq(vestingAfter.end, end, "end");
+        assertEq(vestingAfter.total, expectedTotal, "total");
     }
 
-    function testRevokeAfterEnd() public {
+    function testRevokeEndShouldAtLeastBlockTimestamp(
+        uint256 end,
+        uint256 start,
+        uint256 cliff,
+        uint256 duration,
+        uint256 total
+    ) public {
+        total = bound(total, TOTAL, type(uint128).max);
+        start = bound(start, block.timestamp, block.timestamp + TWENTY_YEARS);
+        duration = bound(duration, OFFSET, TWENTY_YEARS);
+        cliff = bound(cliff, 0, duration - 1);
+        end = bound(end, 0, start + duration - 1);
 
+        uint256 id = vest.create(alice, start, cliff, duration, address(0), false, false, total);
+
+        vest.revoke(id, end);
+
+        Vest.Vesting memory vesting = vest.getVesting(id);
+
+        assertEq(vesting.end, end < block.timestamp ? block.timestamp : end, "end");
     }
 
     function invariantDeadlines() public {
@@ -768,6 +860,6 @@ contract VestTest is Test {
     }
 
     function _createVest() internal returns (uint256 id) {
-        id = vest.create(alice, START, 0, DURATION, address(0), false, false, 1000);
+        id = vest.create(alice, START, 0, DURATION, address(0), false, false, TOTAL);
     }
 }

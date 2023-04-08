@@ -19,7 +19,7 @@ contract MinterVest is Vest {
 
     /* EXTERNAL */
 
-    function geToken() external view returns (address) {
+    function getToken() external view returns (address) {
         return _token;
     }
 

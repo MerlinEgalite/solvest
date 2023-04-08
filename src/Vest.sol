@@ -104,7 +104,7 @@ abstract contract Vest is Owned {
         _vestings[id] = Vesting({
             receiver: receiver,
             start: uint48(start), // No need to safe cast since start <= block.timestamp + _TWENTY_YEAR which fits in a uint48.
-            cliff: uint48(start + cliff), // No need to safe cast since cliff <= _TWENTY_YEAR which fits in a uint48.
+            cliff: uint48(start + cliff), // No need to safe cast since cliff <= duration which fits in a uint48.
             end: uint48(start + duration), // No need to safe cast since duration <= _TWENTY_YEAR which fits in a uint48.
             manager: manager,
             restricted: restricted,
