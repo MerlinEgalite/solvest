@@ -72,6 +72,10 @@ abstract contract Vest is Owned {
         return _vestings[id];
     }
 
+    function getUnclaimed(uint256 id) external view returns (uint256) {
+        return _unclaimed(id);
+    }
+
     function getAccrued(uint256 time, uint256 start, uint256 end, uint256 total) external pure returns (uint256) {
         return _accrued(time, start, end, total);
     }
