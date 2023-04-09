@@ -44,6 +44,7 @@ contract VestTest is BaseTest {
     ERC20 internal token;
 
     address internal alice = address(0x1);
+    address internal bob = address(0x2);
 
     function setUp() public {
         token = new MockERC20("Test", "TST", 18);
@@ -712,11 +713,54 @@ contract VestTest is BaseTest {
         assertApproxEqAbs(unclaimed, expectedUnclaimed, 1);
     }
 
-    function testRevokeShouldRevertWhenCalledByNotOwner(address caller, uint256 id) public {
+    function testRevokeShouldRevertWhenInvalidId(uint256 id) public {
+        id = bound(id, 2, type(uint256).max);
+
+        vm.expectRevert(Vest.InvalidVestingId.selector);
+        vm.prank(address(this));
+        vest.revoke(1);
+    }
+
+    function testRevokeShouldRevertWhenCalledByNotOwnerAndVestingProtected(address caller) public {
         vm.assume(caller != address(this));
 
-        vm.expectRevert("UNAUTHORIZED");
+        uint256 id = vest.create(alice, START, 0, DURATION, address(0), false, true, TOTAL);
+
+        vm.expectRevert(Vest.PermissionDenied.selector);
         vm.prank(caller);
+        vest.revoke(id);
+    }
+
+    function testRevokeShouldRevertWhenCalledByNotOwnerAndNotManagerAndVestingNotProtected(address caller) public {
+        vm.assume(caller != address(this));
+        vm.assume(caller != bob);
+
+        uint256 id = vest.create(alice, START, 0, DURATION, bob, false, true, TOTAL);
+
+        vm.expectRevert(Vest.PermissionDenied.selector);
+        vm.prank(caller);
+        vest.revoke(id);
+    }
+
+    function testRevokeShouldRevertWhenCalledByManagerAndVestingProtected() public {
+        uint256 id = vest.create(alice, START, 0, DURATION, bob, false, true, TOTAL);
+
+        vm.expectRevert(Vest.PermissionDenied.selector);
+        vm.prank(bob);
+        vest.revoke(id);
+    }
+
+    function testRevokeWhenCalledByManagerAndNotVestingProtected() public {
+        uint256 id = vest.create(alice, START, 0, DURATION, bob, false, false, TOTAL);
+
+        vm.prank(bob);
+        vest.revoke(id);
+    }
+
+    function testRevokeWhenCalledByOwnerAndVestingProtected() public {
+        uint256 id = vest.create(alice, START, 0, DURATION, bob, false, false, TOTAL);
+
+        vm.prank(address(this));
         vest.revoke(id);
     }
 

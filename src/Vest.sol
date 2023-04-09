@@ -19,6 +19,7 @@ abstract contract Vest is Owned {
     error DurationTooLong();
     error CliffTooLong();
     error InvalidVestingId();
+    error VestingIsProtected();
 
     /* EVENTS */
 
@@ -56,32 +57,51 @@ abstract contract Vest is Owned {
 
     /* CONSTRUCTOR */
 
+    /// @notice Constructs the contract and sets `msg.sender` as owner.
     constructor() Owned(msg.sender) {}
 
     /* GETTERS */
 
+    /// @notice Returns the number of seconds in 20 years.
     function TWENTY_YEARS() external pure returns (uint256) {
         return _TWENTY_YEARS;
     }
 
+    /// @notice Returns the number of created vestings.
     function ids() external view returns (uint256) {
         return _ids;
     }
 
+    /// @notice Returns the vesting data of the vesting `id`.
     function getVesting(uint256 id) external view returns (Vesting memory) {
         return _vestings[id];
     }
 
+    /// @notice Returns the available unclaimed tokens of the vesting `id`.
     function getUnclaimed(uint256 id) external view returns (uint256) {
         return _unclaimed(id);
     }
 
+    /// @dev Returns the amount of token accrued given the different parameters.
+    /// @param time The time at which the accrual ends.
+    /// @param start The start of the vesting.
+    /// @param start The end of the vesting.
+    /// @param start The total token amount of the vesting.
     function getAccrued(uint256 time, uint256 start, uint256 end, uint256 total) external pure returns (uint256) {
         return _accrued(time, start, end, total);
     }
 
     /* EXTERNAL */
 
+    /// @notice Creates a new vesting.
+    /// @param receiver The receiver of the vesting.
+    /// @param start The start time of the vesting.
+    /// @param cliff The cliff duration of the vesting.
+    /// @param duration The total duration of the vesting.
+    /// @param manager The manager of the vesting that can claim the tokens if the vesting is not restricted.
+    /// @param restricted True if the manager cannot claim tokens on behalf of receiver.
+    /// @param protected True if the vesting cannot be revoked.
+    /// @param total The total amount of vested tokens.
     function create(
         address receiver,
         uint256 start,
@@ -116,14 +136,20 @@ abstract contract Vest is Owned {
         emit VestingCreated(id, receiver);
     }
 
-    function revoke(uint256 id) external onlyOwner {
+    /// @notice Revokes the vesting `id` at `block.timestamp` time.
+    /// @dev Callable if the vesting is not protected.
+    function revoke(uint256 id) external {
         _revoke(id, block.timestamp);
     }
 
-    function revoke(uint256 id, uint256 end) external onlyOwner {
+    /// @notice Revokes the vesting `id` at `end` time.
+    /// @dev Callable if the vesting is not protected.
+    function revoke(uint256 id, uint256 end) external {
         _revoke(id, end);
     }
 
+    /// @notice Claims the available tokens of the vesting `id` and sends them to the receiver.
+    /// @dev Callable by the receiver or the manager if set and the vesting is not restricted.
     function claim(uint256 id) external {
         Vesting storage vesting = _vestings[id];
         if (msg.sender != vesting.receiver && (vesting.restricted || msg.sender != vesting.manager)) {
@@ -135,18 +161,22 @@ abstract contract Vest is Owned {
         emit Claimed(id, amount);
     }
 
+    /// @notice Protects vesting `id` to be revoked.
     function protect(uint256 id) external onlyOwner {
         _validateId(id);
         _vestings[id].protected = true;
         emit VestingProtected(id);
     }
 
+    /// @notice Unprotects vesting `id` to be revoked.
     function unprotect(uint256 id) external onlyOwner {
         _validateId(id);
         _vestings[id].protected = false;
         emit VestingUnprotected(id);
     }
 
+    /// @notice Restricts the vesting `id` to be claimed by the receiver of the vesting only.
+    /// @dev Callable by the receiver of the vesting or the owner only.
     function restrict(uint256 id) external {
         _validateId(id);
         Vesting storage vesting = _vestings[id];
@@ -155,6 +185,8 @@ abstract contract Vest is Owned {
         emit VestingRestricted(id);
     }
 
+    /// @notice Unrestricts the vesting `id` to be claimed by the receiver and the manager if set.
+    /// @dev Callable by the receiver of the vesting or the owner only.
     function unrestrict(uint256 id) external {
         _validateId(id);
         Vesting storage vesting = _vestings[id];
@@ -163,6 +195,8 @@ abstract contract Vest is Owned {
         emit VestingUnrestricted(id);
     }
 
+    /// @notice Sets a new `receiver` to the vesting `id`.
+    /// @dev Callable by the receiver of the vesting only.
     function setReceiver(uint256 id, address receiver) external {
         if (receiver == address(0)) revert AddressIsZero();
         Vesting storage vesting = _vestings[id];
@@ -173,10 +207,12 @@ abstract contract Vest is Owned {
 
     /* INTERNAL */
 
+    /// @dev Validates that the `id` is correct.
     function _validateId(uint256 id) internal view {
         if (id > _ids) revert InvalidVestingId();
     }
 
+    /// @dev Returns the unclaimed amount of tokens related to the vesting `id`.
     function _unclaimed(uint256 id) internal view returns (uint256) {
         Vesting storage vesting = _vestings[id];
         uint256 accrued =
@@ -184,6 +220,11 @@ abstract contract Vest is Owned {
         return accrued - vesting.claimed;
     }
 
+    /// @dev Returns the amount of token accrued given the different parameters.
+    /// @param time The time at which the accrual ends.
+    /// @param start The start of the vesting.
+    /// @param start The end of the vesting.
+    /// @param start The total token amount of the vesting.
     function _accrued(uint256 time, uint256 start, uint256 end, uint256 total) internal pure returns (uint256) {
         if (time < start) return 0;
         if (time >= end) return total;
@@ -191,10 +232,19 @@ abstract contract Vest is Owned {
         return (total * delta) / (end - start);
     }
 
+    /// @dev Revokes a vesting if it is not protected.
+    /// @dev The new `end` cannot be earlier than the current `block.timestamp`.
+    /// @param id The id of the vesting.
+    /// @param end The new end of the vesting.
     function _revoke(uint256 id, uint256 end) internal {
+        _validateId(id);
+        Vesting storage vesting = _vestings[id];
+        if (msg.sender != owner && (vesting.protected || msg.sender != vesting.manager)) {
+            revert PermissionDenied();
+        }
+
         if (end < block.timestamp) end = block.timestamp;
 
-        Vesting storage vesting = _vestings[id];
         if (end < vesting.end) {
             uint48 castedEnd = end.safeCastTo48();
             vesting.end = castedEnd;
@@ -212,5 +262,7 @@ abstract contract Vest is Owned {
         }
     }
 
+    /// @dev Transfers the `amount` of tokens to `receiver`.
+    /// @dev Must be overriden to implement the logic.
     function _transfer(address receiver, uint256 amount) internal virtual;
 }
