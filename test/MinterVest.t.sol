@@ -20,16 +20,16 @@ contract MinterVestTest is BaseTest {
         vm.warp(TWENTY_YEARS + OFFSET);
     }
 
-	function testMinterVestDeploymentShouldFailWhenAddressIsZero() public {
+    function testMinterVestDeploymentShouldFailWhenAddressIsZero() public {
         vm.expectRevert(Vest.AddressIsZero.selector);
         new MockMinterVest(address(0));
     }
 
-	function testGetToken() public {
-		assertEq(vest.getToken(), address(token));
-	}
+    function testGetToken() public {
+        assertEq(vest.getToken(), address(token));
+    }
 
-	function testClaimAndMintTokensAfterCliff(
+    function testClaimAndMintTokensAfterCliff(
         address receiver,
         uint256 start,
         uint256 cliff,

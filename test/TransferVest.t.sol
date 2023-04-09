@@ -34,15 +34,15 @@ contract TransferVestTest is BaseTest {
         new MockTransferVest(sender, address(0));
     }
 
-	function testGetSender() public {
-		assertEq(vest.getSender(), sender);
-	}
+    function testGetSender() public {
+        assertEq(vest.getSender(), sender);
+    }
 
-	function testGetToken() public {
-		assertEq(vest.getToken(), address(token));
-	}
+    function testGetToken() public {
+        assertEq(vest.getToken(), address(token));
+    }
 
-	function testClaimAndTranfserTokensAfterCliff(
+    function testClaimAndTranfserTokensAfterCliff(
         address receiver,
         uint256 start,
         uint256 cliff,
