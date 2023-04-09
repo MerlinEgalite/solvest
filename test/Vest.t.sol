@@ -833,6 +833,15 @@ contract VestTest is BaseTest {
         assertEq(vesting.end, end < block.timestamp ? block.timestamp : end, "end");
     }
 
+    function testIds(uint8 nbOfVestings) public {
+        for (uint256 i; i < nbOfVestings; ++i) {
+            uint256 id = _createVest();
+            assertEq(id, i + 1);
+        }
+
+        assertEq(vest.ids(), nbOfVestings);
+    }
+
     function invariantDeadlines() public {
         Vest.Vesting memory vesting = vest.getVesting(0);
         assertLe(vesting.start, vesting.cliff);

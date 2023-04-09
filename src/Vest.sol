@@ -192,9 +192,9 @@ abstract contract Vest is Owned {
     }
 
     function _revoke(uint256 id, uint256 end) internal {
-        Vesting storage vesting = _vestings[id];
         if (end < block.timestamp) end = block.timestamp;
 
+        Vesting storage vesting = _vestings[id];
         if (end < vesting.end) {
             uint48 castedEnd = end.safeCastTo48();
             vesting.end = castedEnd;
