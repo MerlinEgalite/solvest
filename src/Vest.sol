@@ -149,22 +149,25 @@ abstract contract Vest is Owned {
 
     function restrict(uint256 id) external {
         _validateId(id);
-        if (msg.sender != _vestings[id].receiver && msg.sender != owner) revert PermissionDenied();
-        _vestings[id].restricted = true;
+        Vesting storage vesting = _vestings[id];
+        if (msg.sender != vesting.receiver && msg.sender != owner) revert PermissionDenied();
+        vesting.restricted = true;
         emit VestingRestricted(id);
     }
 
     function unrestrict(uint256 id) external {
         _validateId(id);
-        if (msg.sender != _vestings[id].receiver && msg.sender != owner) revert PermissionDenied();
-        _vestings[id].restricted = false;
+        Vesting storage vesting = _vestings[id];
+        if (msg.sender != vesting.receiver && msg.sender != owner) revert PermissionDenied();
+        vesting.restricted = false;
         emit VestingUnrestricted(id);
     }
 
     function setReceiver(uint256 id, address receiver) external {
-        if (msg.sender != _vestings[id].receiver) revert OnlyReceiver();
         if (receiver == address(0)) revert AddressIsZero();
-        _vestings[id].receiver = receiver;
+        Vesting storage vesting = _vestings[id];
+        if (msg.sender != vesting.receiver) revert OnlyReceiver();
+        vesting.receiver = receiver;
         emit ReceiverSet(id, receiver);
     }
 
