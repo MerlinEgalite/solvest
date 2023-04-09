@@ -1,9 +1,13 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.17;
 
 import {Owned} from "solmate/auth/Owned.sol";
 import {SafeCastLib} from "solmate/utils/SafeCastLib.sol";
 
+/// @title Vest
+/// @author MerlinEgalite
+/// @notice Abstract contract allowing an owner to create and manage vestings.
+/// @dev Modified and improved version of https://github.com/makerdao/dss-vest.
 abstract contract Vest is Owned {
     using SafeCastLib for uint256;
 
@@ -35,24 +39,28 @@ abstract contract Vest is Owned {
     /* STRCUTS */
 
     struct Vesting {
-        address receiver;
-        uint48 start;
-        uint48 cliff;
-        uint48 end;
-        address manager;
-        bool restricted;
-        bool protected;
-        uint128 total;
-        uint128 claimed;
+        address receiver; // The receiver of the vesting.
+        uint48 start; // The start time of the vesting.
+        uint48 cliff; // The end of the cliff.
+        uint48 end; // The end of the vesting.
+        address manager; // The manager of the vesting that can claim the tokens if the vesting is not restricted.
+        bool restricted; // True if the manager cannot claim tokens on behalf of receiver.
+        bool protected; // True if the vesting cannot be revoked.
+        uint128 total; // The total amount of vested tokens.
+        uint128 claimed; // The amount of tokens already claimed.
     }
 
     /* CONSTANTS */
 
+    /// @dev 20 years in seconds.
     uint256 internal constant _TWENTY_YEARS = 20 * 365 days;
 
     /* STORAGE */
 
+    /// @dev The total number of created vestings.
     uint256 internal _ids;
+
+    /// @dev Maps an id to a vesting configuration.
     mapping(uint256 => Vesting) internal _vestings;
 
     /* CONSTRUCTOR */
