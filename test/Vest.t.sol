@@ -412,7 +412,7 @@ contract VestTest is BaseTest {
 
         vm.prank(caller);
         vm.expectRevert(Vest.OnlyReceiver.selector);
-        vest.setReceiver(id, address(0));
+        vest.setReceiver(id, receiver);
     }
 
     function testProtect() public {
