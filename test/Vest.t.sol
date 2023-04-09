@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.0;
 
-import "forge-std/Test.sol";
-import "forge-std/StdStorage.sol";
 import "solmate/test/utils/mocks/MockERC20.sol";
+import "forge-std/StdStorage.sol";
+import "./helpers/BaseTest.sol";
 import "../src/Vest.sol";
 
 contract MockVest is Vest, Test {
@@ -28,7 +28,7 @@ contract MockVest is Vest, Test {
     }
 }
 
-contract VestTest is Test {
+contract VestTest is BaseTest {
     using stdStorage for StdStorage;
 
     event VestingCreated(uint256 id, address receiver);
@@ -40,21 +40,10 @@ contract VestTest is Test {
     event VestingUnrestricted(uint256 id);
     event ReceiverSet(uint256 id, address receiver);
 
-    uint256 internal immutable START;
-    uint256 internal constant TWENTY_YEARS = 20 * 365 days;
-    uint256 internal constant OFFSET = 1_000;
-    uint256 internal constant TOTAL = 1_000;
-    uint256 internal constant DURATION = 3 * 365 days;
-
     MockVest internal vest;
     ERC20 internal token;
 
-    address alice = address(0x1);
-    address bob = address(0x2);
-
-    constructor() {
-        START = block.timestamp + 30 days;
-    }
+    address internal alice = address(0x1);
 
     function setUp() public {
         token = new MockERC20("Test", "TST", 18);
@@ -612,6 +601,7 @@ contract VestTest is Test {
         Vest.Vesting memory vesting = vest.getVesting(id);
 
         assertEq(vesting.claimed, 0);
+        assertEq(ERC20(token).balanceOf(receiver), 0);
     }
 
     function testClaimAfterCliff(
@@ -643,6 +633,7 @@ contract VestTest is Test {
         Vest.Vesting memory vesting = vest.getVesting(id);
 
         assertEq(vesting.claimed, accrued);
+        assertEq(ERC20(token).balanceOf(receiver), accrued);
     }
 
     function testAccruedWithTimeBeforeStart(uint256 time, uint256 start, uint256 end, uint256 total) public {
@@ -731,10 +722,10 @@ contract VestTest is Test {
 
     function testRevokeBeforeStart(uint256 end, uint256 start, uint256 cliff, uint256 duration, uint256 total) public {
         total = bound(total, TOTAL, type(uint128).max);
-        start = bound(start, block.timestamp, block.timestamp + TWENTY_YEARS);
+        start = bound(start, block.timestamp + 1, block.timestamp + TWENTY_YEARS);
         duration = bound(duration, OFFSET, TWENTY_YEARS);
         cliff = bound(cliff, 0, duration);
-        end = bound(end, 0, start - 1);
+        end = bound(end, block.timestamp, start - 1);
 
         uint256 id = vest.create(alice, start, cliff, duration, address(0), false, false, total);
 
