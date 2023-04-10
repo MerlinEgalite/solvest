@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.17;
 
+import {IVest} from "./interfaces/IVest.sol";
+
 import {Owned} from "solmate/auth/Owned.sol";
 import {SafeCastLib} from "solmate/utils/SafeCastLib.sol";
 
@@ -8,7 +10,7 @@ import {SafeCastLib} from "solmate/utils/SafeCastLib.sol";
 /// @author MerlinEgalite
 /// @notice Abstract contract allowing an owner to create and manage vestings.
 /// @dev Modified and improved version of https://github.com/makerdao/dss-vest.
-abstract contract Vest is Owned {
+abstract contract Vest is IVest, Owned {
     using SafeCastLib for uint256;
 
     /* ERRORS */
@@ -35,20 +37,6 @@ abstract contract Vest is Owned {
     event VestingRestricted(uint256 id);
     event VestingUnrestricted(uint256 id);
     event ReceiverSet(uint256 id, address receiver);
-
-    /* STRCUTS */
-
-    struct Vesting {
-        address receiver; // The receiver of the vesting.
-        uint48 start; // The start time of the vesting.
-        uint48 cliff; // The end of the cliff.
-        uint48 end; // The end of the vesting.
-        address manager; // The manager of the vesting that can claim the tokens if the vesting is not restricted.
-        bool restricted; // True if the manager cannot claim tokens on behalf of receiver.
-        bool protected; // True if the vesting cannot be revoked.
-        uint128 total; // The total amount of vested tokens.
-        uint128 claimed; // The amount of tokens already claimed.
-    }
 
     /* CONSTANTS */
 

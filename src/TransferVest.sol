@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.17;
 
+import {ITransferVest} from "./interfaces/ITransferVest.sol";
+
 import {ERC20, SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 
 import {Vest} from "./Vest.sol";
@@ -9,7 +11,7 @@ import {Vest} from "./Vest.sol";
 /// @author MerlinEgalite
 /// @notice TransferVest contract allowing an owner to create and manage vestings.
 /// @dev Claimed tokens are directly transferred from a sender to the receivers.
-contract TransferVest is Vest {
+contract TransferVest is ITransferVest, Vest {
     using SafeTransferLib for ERC20;
 
     /* IMMUTABLES */
