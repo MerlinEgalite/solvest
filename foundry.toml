@@ -8,7 +8,7 @@ runs = 4
 depth = 64
 
 [fuzz]
-runs = 256
+runs = 512
 
 [profile.ci.fuzz]
 runs = 512
