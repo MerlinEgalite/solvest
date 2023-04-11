@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.17;
 
-import {IMinterVest} from "./interfaces/IMinterVest.sol";
-import {IMinter} from "./interfaces/IMinter.sol";
+import {IMintVest} from "./interfaces/IMintVest.sol";
+import {IMintable} from "./interfaces/IMintable.sol";
 
 import {Vest} from "./Vest.sol";
 
-/// @title MinterVest
+/// @title MintVest
 /// @author MerlinEgalite
-/// @notice MinterVest contract allowing an owner to create and manage vestings.
+/// @notice MintVest contract allowing an owner to create and manage vestings.
 /// @dev Claimed tokens are directly minted on the token.
-contract MinterVest is IMinterVest, Vest {
+contract MintVest is IMintVest, Vest {
     /* IMMUTABLES */
 
     /// @dev The token being vested.
@@ -35,6 +35,6 @@ contract MinterVest is IMinterVest, Vest {
 
     /// @dev Mints `amount` of tokens to the `receiver`.
     function _transfer(address receiver, uint256 amount) internal override {
-        IMinter(_token).mint(receiver, amount);
+        IMintable(_token).mint(receiver, amount);
     }
 }
