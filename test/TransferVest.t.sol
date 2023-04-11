@@ -53,7 +53,7 @@ contract TransferVestTest is BaseTest {
         uint256 total,
         uint256 claimTime
     ) public {
-        vm.assume(receiver != address(0));
+        receiver = _boundAddressNotZero(receiver);
         vm.assume(receiver != sender);
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
         duration = bound(duration, OFFSET, TWENTY_YEARS);

@@ -40,7 +40,7 @@ contract MintVestTest is BaseTest {
         uint256 total,
         uint256 claimTime
     ) public {
-        vm.assume(receiver != address(0));
+        receiver = _boundAddressNotZero(receiver);
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
         duration = bound(duration, OFFSET, TWENTY_YEARS);
         cliff = bound(cliff, 0, duration);

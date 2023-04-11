@@ -14,4 +14,8 @@ contract BaseTest is Test {
     constructor() {
         START = block.timestamp + 30 days;
     }
+
+    function _boundAddressNotZero(address input) internal view virtual returns (address) {
+        return address(uint160(bound(uint256(uint160(input)), 1, type(uint160).max)));
+    }
 }
