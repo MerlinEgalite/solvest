@@ -6,7 +6,7 @@ Most noticeable differences compared to `dss-vest`:
 - Better naming
 - The owner can protect/unprotect a vesting plan to be revoked by a manager.
 
-## [MinterVest](./src/MinterVest.sol)
+## [MintVest](./src/MintVest.sol)
 
 Pass the address of the vesting token to the constructor on deploy. This contract must be given authority to `mint()` tokens in the vesting contract.
 

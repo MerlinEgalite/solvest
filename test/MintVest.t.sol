@@ -3,26 +3,26 @@ pragma solidity >=0.8.0;
 
 import "solmate/test/utils/mocks/MockERC20.sol";
 import "./helpers/BaseTest.sol";
-import "../src/MinterVest.sol";
+import "../src/MintVest.sol";
 
-contract MockMinterVest is MinterVest {
-    constructor(address token) MinterVest(token) {}
+contract MockMintVest is MintVest {
+    constructor(address token) MintVest(token) {}
 }
 
-contract MinterVestTest is BaseTest {
-    MockMinterVest internal vest;
+contract MintVestTest is BaseTest {
+    MockMintVest internal vest;
     ERC20 internal token;
 
     function setUp() public {
         token = new MockERC20("Test", "TST", 18);
-        vest = new MockMinterVest(address(token));
+        vest = new MockMintVest(address(token));
 
         vm.warp(TWENTY_YEARS + OFFSET);
     }
 
-    function testMinterVestDeploymentShouldFailWhenAddressIsZero() public {
+    function testMintVestDeploymentShouldFailWhenAddressIsZero() public {
         vm.expectRevert(Vest.AddressIsZero.selector);
-        new MockMinterVest(address(0));
+        new MockMintVest(address(0));
     }
 
     function testGetToken() public {
