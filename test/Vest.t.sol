@@ -265,7 +265,7 @@ contract VestTest is BaseTest {
         vest.validateId(id);
     }
 
-    function testClaimShouldFailWhenCalledByNotReceiverAndNoManagerSet(
+    function testClaimShouldRevertWhenCalledByNotReceiverAndNoManagerSet(
         address caller,
         address receiver,
         uint256 start,
@@ -291,7 +291,7 @@ contract VestTest is BaseTest {
         vest.claim(id);
     }
 
-    function testClaimShouldFailWhenCalledByNotReceiverAndNotManagerButManagerSet(
+    function testClaimShouldRevertWhenCalledByNotReceiverAndNotManagerButManagerSet(
         address caller,
         address receiver,
         uint256 start,
@@ -316,7 +316,7 @@ contract VestTest is BaseTest {
         vest.claim(id);
     }
 
-    function testClaimShouldFailWhenCalledByRestrictedManager(
+    function testClaimShouldRevertWhenCalledByRestrictedManager(
         address receiver,
         uint256 start,
         uint256 cliff,
@@ -397,7 +397,7 @@ contract VestTest is BaseTest {
         assertEq(vesting.receiver, receiver);
     }
 
-    function testSetReceiverShouldFailWhenAddressZero() public {
+    function testSetReceiverShouldRevertWhenAddressZero() public {
         uint256 id = _createVest();
 
         vm.prank(alice);
@@ -405,7 +405,7 @@ contract VestTest is BaseTest {
         vest.setReceiver(id, address(0));
     }
 
-    function testSetReceiverShouldFailWhenCalledByNotReceiver(address caller, address receiver) public {
+    function testSetReceiverShouldRevertWhenCalledByNotReceiver(address caller, address receiver) public {
         vm.assume(caller != alice);
         receiver = _boundAddressNotZero(receiver);
 
@@ -429,7 +429,7 @@ contract VestTest is BaseTest {
         assertTrue(vesting.protected);
     }
 
-    function testProtectShouldFailWhenCalledByNotOwner(address caller) public {
+    function testProtectShouldRevertWhenCalledByNotOwner(address caller) public {
         vm.assume(caller != vest.owner());
 
         uint256 id = _createVest();
@@ -439,7 +439,7 @@ contract VestTest is BaseTest {
         vest.protect(id);
     }
 
-    function testProtectShouldFailWhenInvalidId(uint256 id) public {
+    function testProtectShouldRevertWhenInvalidId(uint256 id) public {
         id = bound(id, 2, type(uint256).max);
 
         _createVest();
@@ -461,7 +461,7 @@ contract VestTest is BaseTest {
         assertFalse(vesting.protected);
     }
 
-    function testUnrotectShouldFailWhenCalledByNotOwner(address caller) public {
+    function testUnrotectShouldRevertWhenCalledByNotOwner(address caller) public {
         vm.assume(caller != vest.owner());
 
         uint256 id = _createVest();
@@ -471,7 +471,7 @@ contract VestTest is BaseTest {
         vest.unprotect(id);
     }
 
-    function testUnprotectShouldFailWhenInvalidId(uint256 id) public {
+    function testUnprotectShouldRevertWhenInvalidId(uint256 id) public {
         id = bound(id, 2, type(uint256).max);
 
         _createVest();
@@ -507,7 +507,7 @@ contract VestTest is BaseTest {
         assertTrue(vesting.restricted);
     }
 
-    function testRestrictShouldFailWhenCalledByNotOwnerNorReceiver(address caller) public {
+    function testRestrictShouldRevertWhenCalledByNotOwnerNorReceiver(address caller) public {
         vm.assume(caller != vest.owner());
         vm.assume(caller != alice);
 
@@ -518,7 +518,7 @@ contract VestTest is BaseTest {
         vest.restrict(id);
     }
 
-    function testRestrictShouldFailWhenInvalidId(uint256 id) public {
+    function testRestrictShouldRevertWhenInvalidId(uint256 id) public {
         id = bound(id, 2, type(uint256).max);
 
         _createVest();
@@ -554,7 +554,7 @@ contract VestTest is BaseTest {
         assertFalse(vesting.restricted);
     }
 
-    function testUnrestrictShouldFailWhenCalledByNotOwnerNorReceiver(address caller) public {
+    function testUnrestrictShouldRevertWhenCalledByNotOwnerNorReceiver(address caller) public {
         vm.assume(caller != vest.owner());
         vm.assume(caller != alice);
 
@@ -565,7 +565,7 @@ contract VestTest is BaseTest {
         vest.unrestrict(id);
     }
 
-    function testUnrestrictShouldFailWhenInvalidId(uint256 id) public {
+    function testUnrestrictShouldRevertWhenInvalidId(uint256 id) public {
         id = bound(id, 2, type(uint256).max);
 
         _createVest();
