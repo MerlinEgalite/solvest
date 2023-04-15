@@ -304,6 +304,7 @@ contract VestTest is BaseTest {
     ) public {
         receiver = _boundAddressNotZero(receiver);
         vm.assume(caller != receiver);
+        vm.assume(caller != manager);
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
         duration = bound(duration, 1, TWENTY_YEARS);
         cliff = bound(cliff, 0, duration);
