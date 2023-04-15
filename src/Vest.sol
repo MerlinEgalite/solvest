@@ -255,6 +255,8 @@ abstract contract Vest is IVest, Owned {
             } else {
                 vesting.total = _accrued(end, vesting.start, vesting.end, vesting.total).safeCastTo128();
             }
+
+            emit VestingRevoked(id, end);
         }
     }
 

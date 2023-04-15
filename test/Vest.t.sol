@@ -389,6 +389,9 @@ contract VestTest is BaseTest {
 
         uint256 id = _createVest();
 
+        vm.expectEmit(true, true, true, true);
+        emit ReceiverSet(id, receiver);
+
         vm.prank(alice);
         vest.setReceiver(id, receiver);
 
@@ -627,9 +630,13 @@ contract VestTest is BaseTest {
 
         vm.warp(claimTime);
 
+        uint256 accrued = vest.getAccrued(block.timestamp, start, start + duration, total);
+
+        vm.expectEmit(true, true, true, true);
+        emit Claimed(id, accrued);
+
         vm.prank(receiver);
         vest.claim(id);
-        uint256 accrued = vest.getAccrued(block.timestamp, start, start + duration, total);
 
         Vest.Vesting memory vesting = vest.getVesting(id);
 
@@ -773,14 +780,17 @@ contract VestTest is BaseTest {
 
         uint256 id = vest.create(alice, start, cliff, duration, address(0), false, false, total);
 
-        vest.revoke(id, end);
+        uint256 expectedEnd = end < block.timestamp ? block.timestamp : end;
 
-        end = end < block.timestamp ? block.timestamp : end;
+        vm.expectEmit(true, true, true, true);
+        emit VestingRevoked(id, expectedEnd);
+
+        vest.revoke(id, end);
 
         Vest.Vesting memory vesting = vest.getVesting(id);
 
-        assertEq(vesting.start, end, "start");
-        assertEq(vesting.end, end, "end");
+        assertEq(vesting.start, expectedEnd, "start");
+        assertEq(vesting.end, expectedEnd, "end");
         assertEq(vesting.total, 0, "total");
     }
 
@@ -793,14 +803,17 @@ contract VestTest is BaseTest {
 
         uint256 id = vest.create(alice, start, cliff, duration, address(0), false, false, total);
 
-        vest.revoke(id, end);
+        uint256 expectedEnd = end < block.timestamp ? block.timestamp : end;
 
-        end = end < block.timestamp ? block.timestamp : end;
+        vm.expectEmit(true, true, true, true);
+        emit VestingRevoked(id, expectedEnd);
+
+        vest.revoke(id, end);
 
         Vest.Vesting memory vesting = vest.getVesting(id);
 
         assertEq(vesting.start, start, "start");
-        assertEq(vesting.end, end, "end");
+        assertEq(vesting.end, expectedEnd, "end");
         assertEq(vesting.total, 0, "total");
     }
 
@@ -843,15 +856,19 @@ contract VestTest is BaseTest {
 
         Vest.Vesting memory vestingBefore = vest.getVesting(id);
 
+        uint256 expectedEnd = end < block.timestamp ? block.timestamp : end;
+
+        vm.expectEmit(true, true, true, true);
+        emit VestingRevoked(id, expectedEnd);
+
         vest.revoke(id, end);
 
-        end = end < block.timestamp ? block.timestamp : end;
         uint256 expectedTotal = vest.getAccrued(vestingBefore.end, start, end, total);
 
         Vest.Vesting memory vestingAfter = vest.getVesting(id);
 
         assertEq(vestingAfter.start, vestingBefore.start, "start");
-        assertEq(vestingAfter.end, end, "end");
+        assertEq(vestingAfter.end, expectedEnd, "end");
         assertEq(vestingAfter.total, expectedTotal, "total");
     }
 
