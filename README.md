@@ -3,7 +3,7 @@
 Improved version of the [MakerDAO dss-vest contracts](https://github.com/makerdao/dss-vest/blob/master). Solvest allows to easily create multiple vesting plans with different parameters.
 
 Most noticeable differences compared to `dss-vest`:
-- Better naming
+- Better naming.
 - The owner can protect/unprotect a vesting plan to be revoked by a manager.
 
 ## [MintVest](./src/MintVest.sol)
