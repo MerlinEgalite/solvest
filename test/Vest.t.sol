@@ -726,7 +726,7 @@ contract VestTest is BaseTest {
 
         vm.expectRevert(Vest.InvalidVestingId.selector);
         vm.prank(address(this));
-        vest.revoke(1);
+        vest.revoke(id);
     }
 
     function testRevokeShouldRevertWhenCalledByNotOwnerAndVestingProtected(address caller) public {

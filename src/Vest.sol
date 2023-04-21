@@ -94,7 +94,7 @@ abstract contract Vest is IVest, Owned {
     /// @param start The start time of the vesting.
     /// @param cliff The cliff duration of the vesting.
     /// @param duration The total duration of the vesting.
-    /// @param manager The manager of the vesting that can claim the tokens if the vesting is not restricted.
+    /// @param manager The manager of the vesting that can claim the tokens if the vesting is not restricted, and revoke the vesting if the vesting is not protected.
     /// @param restricted True if the manager cannot claim tokens on behalf of receiver.
     /// @param protected True if the vesting cannot be revoked.
     /// @param total The total amount of vested tokens.
