@@ -45,7 +45,7 @@ contract TransferVestTest is BaseTest {
     function testClaimAndTranfserTokensAfterCliff(
         address receiver,
         uint256 start,
-        uint256 cliff,
+        uint256 cliffDuration,
         uint256 duration,
         address manager,
         bool restricted,
@@ -57,11 +57,11 @@ contract TransferVestTest is BaseTest {
         vm.assume(receiver != sender);
         start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
         duration = bound(duration, OFFSET, TWENTY_YEARS);
-        cliff = bound(cliff, 0, duration);
-        claimTime = bound(claimTime, start + cliff, type(uint128).max);
+        cliffDuration = bound(cliffDuration, 0, duration);
+        claimTime = bound(claimTime, start + cliffDuration, type(uint128).max);
         total = bound(total, TOTAL, type(uint128).max);
 
-        uint256 id = vest.create(receiver, start, cliff, duration, manager, restricted, protected, total);
+        uint256 id = vest.create(receiver, start, cliffDuration, duration, manager, restricted, protected, total);
 
         vm.warp(claimTime);
 
