@@ -5,6 +5,7 @@ Improved version of the [MakerDAO dss-vest contracts](https://github.com/makerda
 Most noticeable differences compared to `dss-vest`:
 - Better naming.
 - The owner can protect/unprotect a vesting plan to be revoked by a manager.
+- The `cap` has been removed.
 
 ## [MintVest](./src/MintVest.sol)
 
@@ -35,3 +36,24 @@ Now you can run tests, using forge:
 ```bash
 forge test
 ```
+
+## DssVest <> Solvest translation
+
+| DssVest      | Solvest      |
+|--------------|--------------|
+| wards        | owner        |
+| bgn          | start        |
+| clf          | cliff        |
+| fin          | end          |
+| mgr          | manager      |
+| res          | restricted   |
+| tot          | total        |
+| rxd          | claimed      |
+| awards       | vestings     |
+| vest         | claim        |
+| unpaid       | unclaimed    |
+| unpaid       | revoke       |
+| pay          | transfer     |
+| move         | setReceiver  |
+| czar         | sender       |
+| gem          | token        |
