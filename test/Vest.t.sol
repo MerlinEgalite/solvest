@@ -6,12 +6,19 @@ import "forge-std/StdStorage.sol";
 import "./helpers/BaseTest.sol";
 import "../src/Vest.sol";
 
+
+contract SimpleMockVest is Vest {
+    constructor (address owner) Vest(owner) {}
+
+    function _transfer(address receiver, uint256 amount) internal override {}
+}
+
 contract MockVest is Vest, Test {
     using stdStorage for StdStorage;
 
     address internal immutable _token;
 
-    constructor(address token) Vest() {
+    constructor(address token) Vest(msg.sender) {
         _token = token;
     }
 
@@ -53,8 +60,9 @@ contract VestTest is BaseTest {
         vm.warp(TWENTY_YEARS + OFFSET);
     }
 
-    function testOwner() public {
-        assertEq(vest.owner(), address(this));
+    function testOwner(address owner, address) public {
+        Vest newVest = new SimpleMockVest(owner);
+        assertEq(newVest.owner(), owner);
     }
 
     function testCreate(

@@ -53,8 +53,8 @@ abstract contract Vest is IVest, Owned {
 
     /* CONSTRUCTOR */
 
-    /// @notice Constructs the contract and sets `msg.sender` as owner.
-    constructor() Owned(msg.sender) {}
+    /// @notice Constructs and sets `owner` as owner of the contract.
+    constructor(address owner) Owned(owner) {}
 
     /* GETTERS */
 

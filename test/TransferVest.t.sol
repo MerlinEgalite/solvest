@@ -6,7 +6,7 @@ import "./helpers/BaseTest.sol";
 import "../src/TransferVest.sol";
 
 contract MockTransferVest is TransferVest {
-    constructor(address sender, address token) TransferVest(sender, token) {}
+    constructor(address sender, address token) TransferVest(msg.sender, sender, token) {}
 }
 
 contract TransferVestTest is BaseTest {
