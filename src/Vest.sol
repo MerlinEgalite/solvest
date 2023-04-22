@@ -110,8 +110,8 @@ abstract contract Vest is IVest, Owned {
     ) external onlyOwner returns (uint256 id) {
         if (receiver == address(0)) revert AddressIsZero();
         if (total == 0) revert TotalIsZero();
-        if (start > block.timestamp + _TWENTY_YEARS) revert StartTooFar();
-        if (start < block.timestamp - _TWENTY_YEARS) revert StartTooLongAgo();
+        if (start >= block.timestamp + _TWENTY_YEARS) revert StartTooFar();
+        if (start <= block.timestamp - _TWENTY_YEARS) revert StartTooLongAgo();
         if (duration == 0) revert DurationIsZero();
         if (duration > _TWENTY_YEARS) revert DurationTooLong();
         if (cliffDuration > duration) revert CliffDurationTooLong();

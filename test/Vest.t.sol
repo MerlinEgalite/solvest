@@ -68,7 +68,7 @@ contract VestTest is BaseTest {
         uint256 total
     ) public {
         receiver = _boundAddressNotZero(receiver);
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        start = _boundStart(start);
         duration = bound(duration, 1, TWENTY_YEARS);
         cliffDuration = bound(cliffDuration, 0, duration);
         total = bound(total, 1, type(uint128).max);
@@ -104,7 +104,7 @@ contract VestTest is BaseTest {
     ) public {
         vm.assume(caller != address(this));
         receiver = _boundAddressNotZero(receiver);
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        start = _boundStart(start);
         cliffDuration = bound(cliffDuration, 0, TWENTY_YEARS);
         duration = bound(duration, 1, TWENTY_YEARS);
         total = bound(total, 1, type(uint128).max);
@@ -123,7 +123,7 @@ contract VestTest is BaseTest {
         bool protected,
         uint256 total
     ) public {
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        start = _boundStart(start);
         cliffDuration = bound(cliffDuration, 0, TWENTY_YEARS);
         duration = bound(duration, 1, TWENTY_YEARS);
         total = bound(total, 1, type(uint128).max);
@@ -142,7 +142,7 @@ contract VestTest is BaseTest {
         bool protected
     ) public {
         receiver = _boundAddressNotZero(receiver);
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        start = _boundStart(start);
         cliffDuration = bound(cliffDuration, 0, TWENTY_YEARS);
         duration = bound(duration, 1, TWENTY_YEARS);
 
@@ -161,7 +161,7 @@ contract VestTest is BaseTest {
         uint256 total
     ) public {
         receiver = _boundAddressNotZero(receiver);
-        start = bound(start, block.timestamp + TWENTY_YEARS + OFFSET, type(uint48).max);
+        start = bound(start, block.timestamp + TWENTY_YEARS + OFFSET - 1, type(uint48).max);
         cliffDuration = bound(cliffDuration, 0, TWENTY_YEARS);
         duration = bound(duration, 1, TWENTY_YEARS);
         total = bound(total, 1, type(uint128).max);
@@ -181,7 +181,7 @@ contract VestTest is BaseTest {
         uint256 total
     ) public {
         receiver = _boundAddressNotZero(receiver);
-        start = bound(start, 0, block.timestamp - TWENTY_YEARS - 1);
+        start = bound(start, 0, block.timestamp - TWENTY_YEARS);
         cliffDuration = bound(cliffDuration, 0, TWENTY_YEARS);
         duration = bound(duration, 1, TWENTY_YEARS);
         total = bound(total, 1, type(uint128).max);
@@ -200,7 +200,7 @@ contract VestTest is BaseTest {
         uint256 total
     ) public {
         receiver = _boundAddressNotZero(receiver);
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        start = _boundStart(start);
         cliffDuration = bound(cliffDuration, 0, TWENTY_YEARS);
         total = bound(total, 1, type(uint128).max);
 
@@ -219,7 +219,7 @@ contract VestTest is BaseTest {
         uint256 total
     ) public {
         receiver = _boundAddressNotZero(receiver);
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        start = _boundStart(start);
         cliffDuration = bound(cliffDuration, 0, TWENTY_YEARS);
         duration = bound(duration, TWENTY_YEARS + 1, type(uint48).max);
         total = bound(total, 1, type(uint128).max);
@@ -239,7 +239,7 @@ contract VestTest is BaseTest {
         uint256 total
     ) public {
         receiver = _boundAddressNotZero(receiver);
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        start = _boundStart(start);
         cliffDuration = bound(cliffDuration, TWENTY_YEARS + 1, type(uint48).max);
         duration = bound(duration, 1, TWENTY_YEARS);
         total = bound(total, 1, type(uint128).max);
@@ -279,7 +279,7 @@ contract VestTest is BaseTest {
         receiver = _boundAddressNotZero(receiver);
         vm.assume(caller != receiver);
         vm.assume(caller != manager);
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        start = _boundStart(start);
         duration = bound(duration, 1, TWENTY_YEARS);
         cliffDuration = bound(cliffDuration, 0, duration);
         total = bound(total, 1, type(uint128).max);
@@ -305,7 +305,7 @@ contract VestTest is BaseTest {
         receiver = _boundAddressNotZero(receiver);
         vm.assume(caller != receiver);
         vm.assume(caller != manager);
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        start = _boundStart(start);
         duration = bound(duration, 1, TWENTY_YEARS);
         cliffDuration = bound(cliffDuration, 0, duration);
         total = bound(total, 1, type(uint128).max);
@@ -328,7 +328,7 @@ contract VestTest is BaseTest {
     ) public {
         receiver = _boundAddressNotZero(receiver);
         vm.assume(manager != receiver);
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        start = _boundStart(start);
         duration = bound(duration, 1, TWENTY_YEARS);
         cliffDuration = bound(cliffDuration, 0, duration);
         total = bound(total, 1, type(uint128).max);
@@ -352,7 +352,7 @@ contract VestTest is BaseTest {
     ) public {
         receiver = _boundAddressNotZero(receiver);
 
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        start = _boundStart(start);
         duration = bound(duration, 1, TWENTY_YEARS);
         cliffDuration = bound(cliffDuration, 0, duration);
         total = bound(total, 1, type(uint128).max);
@@ -374,7 +374,7 @@ contract VestTest is BaseTest {
     ) public {
         receiver = _boundAddressNotZero(receiver);
 
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        start = _boundStart(start);
         duration = bound(duration, 1, TWENTY_YEARS);
         cliffDuration = bound(cliffDuration, 0, duration);
         total = bound(total, 1, type(uint128).max);
@@ -590,7 +590,7 @@ contract VestTest is BaseTest {
         uint256 claimTime
     ) public {
         receiver = _boundAddressNotZero(receiver);
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        start = _boundStart(start);
         duration = bound(duration, 1, TWENTY_YEARS);
         cliffDuration = bound(cliffDuration, 0, duration);
         claimTime = bound(claimTime, 0, start + cliffDuration - 1);
@@ -621,7 +621,7 @@ contract VestTest is BaseTest {
         uint256 claimTime
     ) public {
         receiver = _boundAddressNotZero(receiver);
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        start = _boundStart(start);
         duration = bound(duration, OFFSET, TWENTY_YEARS);
         cliffDuration = bound(cliffDuration, 0, duration);
         claimTime = bound(claimTime, start + cliffDuration, type(uint128).max);
@@ -675,7 +675,7 @@ contract VestTest is BaseTest {
         public
     {
         total = bound(total, 1, type(uint128).max);
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        start = _boundStart(start);
         duration = bound(duration, 1, TWENTY_YEARS);
         cliffDuration = bound(cliffDuration, 0, duration);
         time = bound(time, 0, start + cliffDuration - 1);
@@ -698,7 +698,7 @@ contract VestTest is BaseTest {
         uint256 total
     ) public {
         total = bound(total, TOTAL, type(uint128).max);
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        start = _boundStart(start);
         duration = bound(duration, OFFSET, TWENTY_YEARS);
         cliffDuration = bound(cliffDuration, 0, duration);
         timeClaim = bound(timeClaim, start + cliffDuration, type(uint96).max);
@@ -774,7 +774,7 @@ contract VestTest is BaseTest {
 
     function testRevokeBeforeStart(uint256 end, uint256 start, uint256 cliffDuration, uint256 duration, uint256 total) public {
         total = bound(total, TOTAL, type(uint128).max);
-        start = bound(start, block.timestamp + 1, block.timestamp + TWENTY_YEARS);
+        start = bound(start, block.timestamp + 1, block.timestamp + TWENTY_YEARS - 1);
         duration = bound(duration, OFFSET, TWENTY_YEARS);
         cliffDuration = bound(cliffDuration, 0, duration);
         end = bound(end, block.timestamp, start - 1);
@@ -797,7 +797,7 @@ contract VestTest is BaseTest {
 
     function testRevokeBeforeCliff(uint256 end, uint256 start, uint256 cliffDuration, uint256 duration, uint256 total) public {
         total = bound(total, TOTAL, type(uint128).max);
-        start = bound(start, block.timestamp, block.timestamp + TWENTY_YEARS);
+        start = bound(start, block.timestamp, block.timestamp + TWENTY_YEARS - 1);
         duration = bound(duration, OFFSET, TWENTY_YEARS);
         cliffDuration = bound(cliffDuration, OFFSET, duration);
         end = bound(end, start, start + cliffDuration - 1);
@@ -820,7 +820,7 @@ contract VestTest is BaseTest {
 
     function testRevokeAfterEnd(uint256 end, uint256 start, uint256 cliffDuration, uint256 duration, uint256 total) public {
         total = bound(total, TOTAL, type(uint128).max);
-        start = bound(start, block.timestamp, block.timestamp + TWENTY_YEARS);
+        start = bound(start, block.timestamp, block.timestamp + TWENTY_YEARS - 1);
         duration = bound(duration, OFFSET, TWENTY_YEARS);
         cliffDuration = bound(cliffDuration, 0, duration);
         end = bound(end, start + duration, type(uint256).max);
@@ -848,7 +848,7 @@ contract VestTest is BaseTest {
         uint256 total
     ) public {
         total = bound(total, TOTAL, type(uint128).max);
-        start = bound(start, block.timestamp, block.timestamp + TWENTY_YEARS);
+        start = bound(start, block.timestamp, block.timestamp + TWENTY_YEARS - 1);
         duration = bound(duration, OFFSET, TWENTY_YEARS);
         cliffDuration = bound(cliffDuration, 0, duration - 1);
         end = bound(end, start + cliffDuration, start + duration - 1);
@@ -881,7 +881,7 @@ contract VestTest is BaseTest {
         uint256 total
     ) public {
         total = bound(total, TOTAL, type(uint128).max);
-        start = bound(start, block.timestamp, block.timestamp + TWENTY_YEARS);
+        start = bound(start, block.timestamp, block.timestamp + TWENTY_YEARS - 1);
         duration = bound(duration, OFFSET, TWENTY_YEARS);
         cliffDuration = bound(cliffDuration, 0, duration - 1);
         end = bound(end, 0, start + duration - 1);
