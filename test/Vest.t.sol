@@ -244,7 +244,7 @@ contract VestTest is BaseTest {
         duration = bound(duration, 1, TWENTY_YEARS);
         total = bound(total, 1, type(uint128).max);
 
-        vm.expectRevert(Vest.CliffTooLong.selector);
+        vm.expectRevert(Vest.CliffDurationTooLong.selector);
         vest.create(receiver, start, cliff, duration, manager, restricted, protected, total);
     }
 

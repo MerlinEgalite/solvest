@@ -23,7 +23,7 @@ abstract contract Vest is IVest, Owned {
     error StartTooLongAgo();
     error DurationIsZero();
     error DurationTooLong();
-    error CliffTooLong();
+    error CliffDurationTooLong();
     error InvalidVestingId();
     error VestingIsProtected();
 
@@ -92,7 +92,7 @@ abstract contract Vest is IVest, Owned {
     /// @notice Creates a new vesting.
     /// @param receiver The receiver of the vesting.
     /// @param start The start time of the vesting.
-    /// @param cliff The cliff duration of the vesting.
+    /// @param cliffDuration The cliff duration of the vesting.
     /// @param duration The total duration of the vesting.
     /// @param manager The manager of the vesting that can claim the tokens if the vesting is not restricted, and revoke the vesting if the vesting is not protected.
     /// @param restricted True if the manager cannot claim tokens on behalf of receiver.
@@ -101,7 +101,7 @@ abstract contract Vest is IVest, Owned {
     function create(
         address receiver,
         uint256 start,
-        uint256 cliff,
+        uint256 cliffDuration,
         uint256 duration,
         address manager,
         bool restricted,
@@ -114,13 +114,13 @@ abstract contract Vest is IVest, Owned {
         if (start < block.timestamp - _TWENTY_YEARS) revert StartTooLongAgo();
         if (duration == 0) revert DurationIsZero();
         if (duration > _TWENTY_YEARS) revert DurationTooLong();
-        if (cliff > duration) revert CliffTooLong();
+        if (cliffDuration > duration) revert CliffDurationTooLong();
 
         id = ++_ids;
         _vestings[id] = Vesting({
             receiver: receiver,
             start: uint48(start), // No need to safe cast since start <= block.timestamp + _TWENTY_YEARS which fits in a uint48.
-            cliff: uint48(start + cliff), // No need to safe cast since cliff <= duration which fits in a uint48.
+            cliff: uint48(start + cliffDuration), // No need to safe cast since cliffDuration <= duration which fits in a uint48.
             end: uint48(start + duration), // No need to safe cast since duration <= _TWENTY_YEARS which fits in a uint48.
             manager: manager,
             restricted: restricted,
