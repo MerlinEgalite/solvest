@@ -18,4 +18,8 @@ contract BaseTest is Test {
     function _boundAddressNotZero(address input) internal view virtual returns (address) {
         return address(uint160(bound(uint256(uint160(input)), 1, type(uint160).max)));
     }
+
+    function _boundId(uint256 id) internal pure returns (uint256) {
+        return (id == 1) ? 0 : id;
+    }
 }
