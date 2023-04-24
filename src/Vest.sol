@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import {IVest} from "./interfaces/IVest.sol";
 
 import {Owned} from "solmate/auth/Owned.sol";
+import {Math} from "morpho-utils/math/Math.sol";
 import {SafeCastLib} from "solmate/utils/SafeCastLib.sol";
 
 /// @title Vest
@@ -53,8 +54,8 @@ abstract contract Vest is IVest, Owned {
 
     /* CONSTRUCTOR */
 
-    /// @notice Constructs the contract and sets `msg.sender` as owner.
-    constructor() Owned(msg.sender) {}
+    /// @notice Constructs and sets `owner` as owner of the contract.
+    constructor(address owner) Owned(owner) {}
 
     /* GETTERS */
 
@@ -119,9 +120,9 @@ abstract contract Vest is IVest, Owned {
         id = ++_ids;
         _vestings[id] = Vesting({
             receiver: receiver,
-            start: uint48(start), // No need to safe cast since start <= block.timestamp + _TWENTY_YEARS which fits in a uint48.
-            cliff: uint48(start + cliffDuration), // No need to safe cast since cliffDuration <= duration which fits in a uint48.
-            end: uint48(start + duration), // No need to safe cast since duration <= _TWENTY_YEARS which fits in a uint48.
+            start: start.safeCastTo48(),
+            cliff: (start + cliffDuration).safeCastTo48(),
+            end: (start + duration).safeCastTo48(),
             manager: manager,
             restricted: restricted,
             protected: protected,
@@ -147,14 +148,13 @@ abstract contract Vest is IVest, Owned {
     /// @notice Claims the available tokens of the vesting `id` and sends them to the receiver.
     /// @dev Callable by the receiver or the manager if set and the vesting is not restricted.
     function claim(uint256 id) external {
-        Vesting storage vesting = _vestings[id];
-        if (msg.sender != vesting.receiver && (vesting.restricted || msg.sender != vesting.manager)) {
-            revert PermissionDenied();
-        }
-        uint256 amount = _unclaimed(id);
-        vesting.claimed += amount.safeCastTo128();
-        _transfer(vesting.receiver, amount);
-        emit Claimed(id, amount);
+        _claim(id, type(uint256).max);
+    }
+
+    /// @notice Claims the available tokens of the vesting `id` and sends them to the receiver.
+    /// @dev Callable by the receiver or the manager if set and the vesting is not restricted.
+    function claim(uint256 id, uint256 maxAmount) external {
+        _claim(id, maxAmount);
     }
 
     /// @notice Protects vesting `id` to be revoked.
@@ -226,6 +226,20 @@ abstract contract Vest is IVest, Owned {
         if (time >= end) return total;
         uint256 delta = time - start;
         return (total * delta) / (end - start);
+    }
+
+    /// @notice Claims the available tokens of the vesting `id` and sends them to the receiver.
+    /// @param id The id of the vesting.
+    /// @param maxAmount The maximum amount of tokens to claim.
+    function _claim(uint256 id, uint256 maxAmount) internal {
+        Vesting storage vesting = _vestings[id];
+        if (msg.sender != vesting.receiver && (vesting.restricted || msg.sender != vesting.manager)) {
+            revert PermissionDenied();
+        }
+        uint256 amount = Math.min(_unclaimed(id), maxAmount);
+        vesting.claimed += amount.safeCastTo128();
+        _transfer(vesting.receiver, amount);
+        emit Claimed(id, amount);
     }
 
     /// @dev Revokes a vesting if it is not protected.

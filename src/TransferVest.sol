@@ -24,8 +24,11 @@ contract TransferVest is ITransferVest, Vest {
 
     /* CONSTRUCTOR */
 
-    /// @notice Constructs the contract and sets the `token` being vested as well as the `sender`of those tokens.
-    constructor(address sender, address token) Vest() {
+    /// @notice Constructs the contract.
+    /// @param owner The owner of the contract.
+    /// @param sender The sender of the vested token.
+    /// @param token The token being vested.
+    constructor(address owner, address sender, address token) Vest(owner) {
         if (sender == address(0) || token == address(0)) revert AddressIsZero();
         _sender = sender;
         _token = token;

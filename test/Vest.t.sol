@@ -6,12 +6,19 @@ import "forge-std/StdStorage.sol";
 import "./helpers/BaseTest.sol";
 import "../src/Vest.sol";
 
+
+contract SimpleMockVest is Vest {
+    constructor (address owner) Vest(owner) {}
+
+    function _transfer(address receiver, uint256 amount) internal override {}
+}
+
 contract MockVest is Vest, Test {
     using stdStorage for StdStorage;
 
     address internal immutable _token;
 
-    constructor(address token) Vest() {
+    constructor(address token) Vest(msg.sender) {
         _token = token;
     }
 
@@ -53,8 +60,9 @@ contract VestTest is BaseTest {
         vm.warp(TWENTY_YEARS + OFFSET);
     }
 
-    function testOwner() public {
-        assertEq(vest.owner(), address(this));
+    function testOwner(address owner) public {
+        Vest newVest = new SimpleMockVest(owner);
+        assertEq(newVest.owner(), owner);
     }
 
     function testCreate(
@@ -609,6 +617,37 @@ contract VestTest is BaseTest {
         assertEq(ERC20(token).balanceOf(receiver), 0);
     }
 
+    function testClaimBeforeCliffWithMaxAmount(
+        address receiver,
+        uint256 start,
+        uint256 cliff,
+        uint256 duration,
+        address manager,
+        bool restricted,
+        bool protected,
+        uint256 total,
+        uint256 claimTime,
+        uint256 maxAmount
+    ) public {
+        receiver = _boundAddressNotZero(receiver);
+        start = _boundStart(start);
+        duration = bound(duration, 1, TWENTY_YEARS);
+        cliff = bound(cliff, 0, duration);
+        claimTime = bound(claimTime, 0, start + cliff - 1);
+        total = bound(total, 1, type(uint128).max);
+        maxAmount = bound(maxAmount, 0, type(uint256).max);
+
+        uint256 id = vest.create(receiver, start, cliff, duration, manager, restricted, protected, total);
+
+        vm.warp(claimTime);
+
+        vm.prank(receiver);
+        vest.claim(id, maxAmount);
+
+        assertEq(vest.getVesting(id).claimed, 0);
+        assertEq(ERC20(token).balanceOf(receiver), 0);
+    }
+
     function testClaimAfterCliff(
         address receiver,
         uint256 start,
@@ -639,10 +678,45 @@ contract VestTest is BaseTest {
         vm.prank(receiver);
         vest.claim(id);
 
-        Vest.Vesting memory vesting = vest.getVesting(id);
-
-        assertEq(vesting.claimed, accrued);
+        assertEq(vest.getVesting(id).claimed, accrued);
         assertEq(ERC20(token).balanceOf(receiver), accrued);
+    }
+
+    function testClaimAfterCliffWithMaxAmount(
+        address receiver,
+        uint256 start,
+        uint256 cliff,
+        uint256 duration,
+        address manager,
+        bool restricted,
+        bool protected,
+        uint256 total,
+        uint256 claimTime,
+        uint256 maxAmount
+    ) public {
+        receiver = _boundAddressNotZero(receiver);
+        start = _boundStart(start);
+        duration = bound(duration, OFFSET, TWENTY_YEARS);
+        cliff = bound(cliff, 0, duration);
+        claimTime = bound(claimTime, start + cliff, type(uint128).max);
+        total = bound(total, TOTAL, type(uint128).max);
+        maxAmount = bound(maxAmount, 0, type(uint256).max);
+
+        uint256 id = vest.create(receiver, start, cliff, duration, manager, restricted, protected, total);
+
+        vm.warp(claimTime);
+
+        uint256 accrued = vest.getAccrued(block.timestamp, start, start + duration, total);
+        uint256 expectedClaimed = Math.min(accrued, maxAmount);
+
+        vm.expectEmit(true, true, true, true);
+        emit Claimed(id, expectedClaimed);
+
+        vm.prank(receiver);
+        vest.claim(id, maxAmount);
+
+        assertEq(vest.getVesting(id).claimed, expectedClaimed);
+        assertEq(ERC20(token).balanceOf(receiver), expectedClaimed);
     }
 
     function testAccruedWithTimeBeforeStart(uint256 time, uint256 start, uint256 end, uint256 total) public {

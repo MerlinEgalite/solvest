@@ -6,7 +6,7 @@ import "./helpers/BaseTest.sol";
 import "../src/MintVest.sol";
 
 contract MockMintVest is MintVest {
-    constructor(address token) MintVest(token) {}
+    constructor(address token) MintVest(msg.sender, token) {}
 }
 
 contract MintVestTest is BaseTest {
