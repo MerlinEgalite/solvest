@@ -49,7 +49,6 @@ contract TransferVest is ITransferVest, Vest {
     /* INTERNAL */
 
     /// @dev Transfers `amount` of tokens from the `sender` to the `receiver`.
-    /// @dev `sender` must have approved the contract to spend the tokens.
     function _transfer(address receiver, uint256 amount) internal override {
         ERC20(_token).safeTransferFrom(_sender, receiver, amount);
     }
