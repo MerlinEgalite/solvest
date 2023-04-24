@@ -6,7 +6,7 @@ import "./helpers/BaseTest.sol";
 import "../src/MintVest.sol";
 
 contract MockMintVest is MintVest {
-    constructor(address token) MintVest(token) {}
+    constructor(address token) MintVest(msg.sender, token) {}
 }
 
 contract MintVestTest is BaseTest {
@@ -41,7 +41,7 @@ contract MintVestTest is BaseTest {
         uint256 claimTime
     ) public {
         receiver = _boundAddressNotZero(receiver);
-        start = bound(start, OFFSET, block.timestamp + TWENTY_YEARS);
+        start = _boundStart(start);
         duration = bound(duration, OFFSET, TWENTY_YEARS);
         cliff = bound(cliff, 0, duration);
         claimTime = bound(claimTime, start + cliff, type(uint128).max);

@@ -18,8 +18,10 @@ contract MintVest is IMintVest, Vest {
 
     /* CONSTRUCTOR */
 
-    /// @notice Constructs the contract and sets the `token` being vested.
-    constructor(address token) Vest() {
+    /// @notice Constructs the contract.
+    /// @param owner The owner of the contract.
+    /// @param token The token being vested.
+    constructor(address owner, address token) Vest(owner) {
         if (token == address(0)) revert AddressIsZero();
         _token = token;
     }
