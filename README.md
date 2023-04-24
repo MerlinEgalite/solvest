@@ -4,6 +4,7 @@ Improved version of the [MakerDAO dss-vest contracts](https://github.com/makerda
 
 Most noticeable differences compared to `dss-vest`:
 - Better naming.
+- There is only one single owner for a vesting contract instead of multiple owners.
 - The owner can protect/unprotect a vesting plan to be revoked by a manager.
 - The `cap` has been removed.
 
@@ -52,7 +53,7 @@ forge test
 | awards       | vestings     |
 | vest         | claim        |
 | unpaid       | unclaimed    |
-| unpaid       | revoke       |
+| yank         | revoke       |
 | pay          | transfer     |
 | move         | setReceiver  |
 | czar         | sender       |
