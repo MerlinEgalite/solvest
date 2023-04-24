@@ -60,7 +60,7 @@ contract VestTest is BaseTest {
         vm.warp(TWENTY_YEARS + OFFSET);
     }
 
-    function testOwner(address owner, address) public {
+    function testOwner(address owner) public {
         Vest newVest = new SimpleMockVest(owner);
         assertEq(newVest.owner(), owner);
     }
