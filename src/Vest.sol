@@ -205,7 +205,7 @@ abstract contract Vest is IVest, Owned {
 
     /// @dev Validates that the `id` is correct.
     function _validateId(uint256 id) internal view {
-        if (id > _ids) revert InvalidVestingId();
+        if (_vestings[id].receiver == address(0)) revert InvalidVestingId();
     }
 
     /// @dev Returns the unclaimed amount of tokens related to the vesting `id`.

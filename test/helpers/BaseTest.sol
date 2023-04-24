@@ -22,4 +22,8 @@ contract BaseTest is Test {
     function _boundStart(uint256 start) internal view virtual returns (uint256) {
         return bound(start, OFFSET + 1, block.timestamp + TWENTY_YEARS - 1);
     }
+
+    function _boundId(uint256 id) internal pure returns (uint256) {
+        return (id == 1) ? 0 : id;
+    }
 }

@@ -256,19 +256,19 @@ contract VestTest is BaseTest {
         vest.create(receiver, start, cliff, duration, manager, restricted, protected, total);
     }
 
-    function testValidateId(uint256 ids, uint256 id) public {
-        ids = bound(ids, 1, type(uint256).max);
-        id = bound(id, 0, ids - 1);
-        stdstore.target(address(vest)).sig("ids()").checked_write(ids);
+    function testValidateId() public {
+        uint256 id = vest.create(alice, START, 0, DURATION, address(0), false, false, TOTAL);
 
         vest.validateId(id);
     }
 
-    function testValidateIdShouldRevertIfIdStrictlySuperiorToIds(uint256 ids, uint256 id) public {
-        ids = bound(ids, 0, type(uint256).max - 1);
-        id = bound(id, ids + 1, type(uint256).max);
-        stdstore.target(address(vest)).sig("ids()").checked_write(ids);
+    function testValidateIdWhenIdIsZero() public {
+        vest.create(alice, START, 0, DURATION, address(0), false, false, TOTAL);
+        vm.expectRevert(Vest.InvalidVestingId.selector);
+        vest.validateId(0);
+    }
 
+    function testValidateIdShouldRevertWhenNotAVesting(uint256 id) public {
         vm.expectRevert(Vest.InvalidVestingId.selector);
         vest.validateId(id);
     }
@@ -452,7 +452,7 @@ contract VestTest is BaseTest {
     }
 
     function testProtectShouldRevertWhenInvalidId(uint256 id) public {
-        id = bound(id, 2, type(uint256).max);
+        id = _boundId(id);
 
         _createVest();
 
@@ -484,7 +484,7 @@ contract VestTest is BaseTest {
     }
 
     function testUnprotectShouldRevertWhenInvalidId(uint256 id) public {
-        id = bound(id, 2, type(uint256).max);
+        id = _boundId(id);
 
         _createVest();
 
@@ -531,7 +531,7 @@ contract VestTest is BaseTest {
     }
 
     function testRestrictShouldRevertWhenInvalidId(uint256 id) public {
-        id = bound(id, 2, type(uint256).max);
+        id = _boundId(id);
 
         _createVest();
 
@@ -578,7 +578,7 @@ contract VestTest is BaseTest {
     }
 
     function testUnrestrictShouldRevertWhenInvalidId(uint256 id) public {
-        id = bound(id, 2, type(uint256).max);
+        id = _boundId(id);
 
         _createVest();
 
@@ -796,7 +796,7 @@ contract VestTest is BaseTest {
     }
 
     function testRevokeShouldRevertWhenInvalidId(uint256 id) public {
-        id = bound(id, 2, type(uint256).max);
+        id = _boundId(id);
 
         vm.expectRevert(Vest.InvalidVestingId.selector);
         vm.prank(address(this));
