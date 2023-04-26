@@ -53,6 +53,12 @@ forge test
 forge script scripts/DeployMintVest.s.sol:DeployMintVest --broadcast --rpc-url <RPC_URL> -vvvv
 ```
 
+- To deploy the `TransferVest` contract, run the following command.
+
+```sh
+forge script scripts/DeployTransferVest.s.sol:DeployTransferVest --broadcast --rpc-url <RPC_URL> -vvvv
+```
+
 ## DssVest <> Solvest translation
 
 | DssVest | Solvest     |
