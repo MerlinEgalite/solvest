@@ -16,27 +16,63 @@ abstract contract Vest is IVest, Owned {
 
     /* ERRORS */
 
+    /// @notice Thrown when the sender has not the permission to call the function.
     error PermissionDenied();
+
+    /// @notice Thrown when only the receiver can call the function.
     error OnlyReceiver();
+
+    /// @notice Thrown when the address passed as argument is the zero address.
     error AddressIsZero();
+
+    /// @notice Thrown when the total amount of tokens is zero for a new vesting.
     error TotalIsZero();
+
+    /// @notice Thrown when the start time is too far in the future for a new vesting.
     error StartTooFar();
+
+    /// @notice Thrown when the start time is too far in the past for a new vesting.
     error StartTooLongAgo();
+
+    /// @notice Thrown when the duration is zero for a new vesting.
     error DurationIsZero();
+
+    /// @notice Thrown when the duration is too long for a new vesting.
     error DurationTooLong();
+
+    /// @notice Thrown when the cliff duration is too long for a new vesting.
     error CliffDurationTooLong();
+
+    /// @notice Thrown when the vesting does not exist.
     error InvalidVestingId();
+
+    /// @notice Thrown when the vesting is not revokable.
     error VestingIsProtected();
 
     /* EVENTS */
 
+    /// @notice Emitted when a vesting is created with `id` and `receiver`.
     event VestingCreated(uint256 id, address receiver);
+
+    /// @notice Emitted when the vesting `id` is revoked at `end`.
     event VestingRevoked(uint256 id, uint256 end);
+
+    /// @notice Emitted when an `amount` of tokens is claimed for the vesting `id`.
     event Claimed(uint256 id, uint256 amount);
+
+    /// @notice Emitted when the vesting `id` is protected.
     event VestingProtected(uint256 id);
+
+    /// @notice Emitted when the vesting `id` is unprotected.
     event VestingUnprotected(uint256 id);
+
+    /// @notice Emitted when the vesting `id` is restricted.
     event VestingRestricted(uint256 id);
+
+    /// @notice Emitted when the vesting `id` is unrestricted.
     event VestingUnrestricted(uint256 id);
+
+    /// @notice Emitted when the receiver of vesting `id` is set to `receiver`.
     event ReceiverSet(uint256 id, address receiver);
 
     /* CONSTANTS */
