@@ -14,31 +14,6 @@ import {SafeCastLib} from "solmate/utils/SafeCastLib.sol";
 abstract contract Vest is IVest, Owned {
     using SafeCastLib for uint256;
 
-    /* ERRORS */
-
-    error PermissionDenied();
-    error OnlyReceiver();
-    error AddressIsZero();
-    error TotalIsZero();
-    error StartTooFar();
-    error StartTooLongAgo();
-    error DurationIsZero();
-    error DurationTooLong();
-    error CliffDurationTooLong();
-    error InvalidVestingId();
-    error VestingIsProtected();
-
-    /* EVENTS */
-
-    event VestingCreated(uint256 id, address receiver);
-    event VestingRevoked(uint256 id, uint256 end);
-    event Claimed(uint256 id, uint256 amount);
-    event VestingProtected(uint256 id);
-    event VestingUnprotected(uint256 id);
-    event VestingRestricted(uint256 id);
-    event VestingUnrestricted(uint256 id);
-    event ReceiverSet(uint256 id, address receiver);
-
     /* CONSTANTS */
 
     /// @dev 20 years in seconds.
