@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.0;
 
+import "../src/interfaces/IVest.sol";
+
 import "solmate/test/utils/mocks/MockERC20.sol";
 import "./helpers/BaseTest.sol";
 import "../src/TransferVest.sol";
@@ -27,10 +29,10 @@ contract TransferVestTest is BaseTest {
     }
 
     function testTransferVestDeploymentShouldFailWhenAddressIsZero() public {
-        vm.expectRevert(Vest.AddressIsZero.selector);
+        vm.expectRevert(IVest.AddressIsZero.selector);
         new MockTransferVest(address(0), address(token));
 
-        vm.expectRevert(Vest.AddressIsZero.selector);
+        vm.expectRevert(IVest.AddressIsZero.selector);
         new MockTransferVest(sender, address(0));
     }
 

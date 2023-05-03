@@ -136,7 +136,7 @@ contract VestTest is BaseTest {
         duration = bound(duration, 1, TWENTY_YEARS);
         total = bound(total, 1, type(uint128).max);
 
-        vm.expectRevert(Vest.AddressIsZero.selector);
+        vm.expectRevert(IVest.AddressIsZero.selector);
         vest.create(address(0), start, cliffDuration, duration, manager, restricted, protected, total);
     }
 
@@ -154,7 +154,7 @@ contract VestTest is BaseTest {
         cliffDuration = bound(cliffDuration, 0, TWENTY_YEARS);
         duration = bound(duration, 1, TWENTY_YEARS);
 
-        vm.expectRevert(Vest.TotalIsZero.selector);
+        vm.expectRevert(IVest.TotalIsZero.selector);
         vest.create(receiver, start, cliffDuration, duration, manager, restricted, protected, 0);
     }
 
@@ -174,7 +174,7 @@ contract VestTest is BaseTest {
         duration = bound(duration, 1, TWENTY_YEARS);
         total = bound(total, 1, type(uint128).max);
 
-        vm.expectRevert(Vest.StartTooFar.selector);
+        vm.expectRevert(IVest.StartTooFar.selector);
         vest.create(receiver, start, cliffDuration, duration, manager, restricted, protected, total);
     }
 
@@ -194,7 +194,7 @@ contract VestTest is BaseTest {
         duration = bound(duration, 1, TWENTY_YEARS);
         total = bound(total, 1, type(uint128).max);
 
-        vm.expectRevert(Vest.StartTooLongAgo.selector);
+        vm.expectRevert(IVest.StartTooLongAgo.selector);
         vest.create(receiver, start, cliffDuration, duration, manager, restricted, protected, total);
     }
 
@@ -212,7 +212,7 @@ contract VestTest is BaseTest {
         cliffDuration = bound(cliffDuration, 0, TWENTY_YEARS);
         total = bound(total, 1, type(uint128).max);
 
-        vm.expectRevert(Vest.DurationIsZero.selector);
+        vm.expectRevert(IVest.DurationIsZero.selector);
         vest.create(receiver, start, cliffDuration, 0, manager, restricted, protected, total);
     }
 
@@ -232,7 +232,7 @@ contract VestTest is BaseTest {
         duration = bound(duration, TWENTY_YEARS + 1, type(uint48).max);
         total = bound(total, 1, type(uint128).max);
 
-        vm.expectRevert(Vest.DurationTooLong.selector);
+        vm.expectRevert(IVest.DurationTooLong.selector);
         vest.create(receiver, start, cliffDuration, duration, manager, restricted, protected, total);
     }
 
@@ -252,7 +252,7 @@ contract VestTest is BaseTest {
         duration = bound(duration, 1, TWENTY_YEARS);
         total = bound(total, 1, type(uint128).max);
 
-        vm.expectRevert(Vest.CliffDurationTooLong.selector);
+        vm.expectRevert(IVest.CliffDurationTooLong.selector);
         vest.create(receiver, start, cliffDuration, duration, manager, restricted, protected, total);
     }
 
@@ -264,12 +264,12 @@ contract VestTest is BaseTest {
 
     function testValidateIdWhenIdIsZero() public {
         vest.create(alice, START, 0, DURATION, address(0), false, false, TOTAL);
-        vm.expectRevert(Vest.InvalidVestingId.selector);
+        vm.expectRevert(IVest.InvalidVestingId.selector);
         vest.validateId(0);
     }
 
     function testValidateIdShouldRevertWhenNotAVesting(uint256 id) public {
-        vm.expectRevert(Vest.InvalidVestingId.selector);
+        vm.expectRevert(IVest.InvalidVestingId.selector);
         vest.validateId(id);
     }
 
@@ -295,7 +295,7 @@ contract VestTest is BaseTest {
         uint256 id = vest.create(receiver, start, cliffDuration, duration, manager, restricted, protected, total);
 
         vm.prank(caller);
-        vm.expectRevert(Vest.PermissionDenied.selector);
+        vm.expectRevert(IVest.PermissionDenied.selector);
         vest.claim(id);
     }
 
@@ -321,7 +321,7 @@ contract VestTest is BaseTest {
         uint256 id = vest.create(receiver, start, cliffDuration, duration, manager, restricted, protected, total);
 
         vm.prank(caller);
-        vm.expectRevert(Vest.PermissionDenied.selector);
+        vm.expectRevert(IVest.PermissionDenied.selector);
         vest.claim(id);
     }
 
@@ -344,7 +344,7 @@ contract VestTest is BaseTest {
         uint256 id = vest.create(receiver, start, cliffDuration, duration, manager, true, protected, total);
 
         vm.prank(manager);
-        vm.expectRevert(Vest.PermissionDenied.selector);
+        vm.expectRevert(IVest.PermissionDenied.selector);
         vest.claim(id);
     }
 
@@ -413,7 +413,7 @@ contract VestTest is BaseTest {
         uint256 id = _createVest();
 
         vm.prank(alice);
-        vm.expectRevert(Vest.AddressIsZero.selector);
+        vm.expectRevert(IVest.AddressIsZero.selector);
         vest.setReceiver(id, address(0));
     }
 
@@ -424,7 +424,7 @@ contract VestTest is BaseTest {
         uint256 id = _createVest();
 
         vm.prank(caller);
-        vm.expectRevert(Vest.OnlyReceiver.selector);
+        vm.expectRevert(IVest.OnlyReceiver.selector);
         vest.setReceiver(id, receiver);
     }
 
@@ -456,7 +456,7 @@ contract VestTest is BaseTest {
 
         _createVest();
 
-        vm.expectRevert(Vest.InvalidVestingId.selector);
+        vm.expectRevert(IVest.InvalidVestingId.selector);
         vest.protect(id);
     }
 
@@ -488,7 +488,7 @@ contract VestTest is BaseTest {
 
         _createVest();
 
-        vm.expectRevert(Vest.InvalidVestingId.selector);
+        vm.expectRevert(IVest.InvalidVestingId.selector);
         vest.unprotect(id);
     }
 
@@ -526,7 +526,7 @@ contract VestTest is BaseTest {
         uint256 id = _createVest();
 
         vm.prank(caller);
-        vm.expectRevert(Vest.PermissionDenied.selector);
+        vm.expectRevert(IVest.PermissionDenied.selector);
         vest.restrict(id);
     }
 
@@ -535,7 +535,7 @@ contract VestTest is BaseTest {
 
         _createVest();
 
-        vm.expectRevert(Vest.InvalidVestingId.selector);
+        vm.expectRevert(IVest.InvalidVestingId.selector);
         vest.restrict(id);
     }
 
@@ -573,7 +573,7 @@ contract VestTest is BaseTest {
         uint256 id = _createVest();
 
         vm.prank(caller);
-        vm.expectRevert(Vest.PermissionDenied.selector);
+        vm.expectRevert(IVest.PermissionDenied.selector);
         vest.unrestrict(id);
     }
 
@@ -582,7 +582,7 @@ contract VestTest is BaseTest {
 
         _createVest();
 
-        vm.expectRevert(Vest.InvalidVestingId.selector);
+        vm.expectRevert(IVest.InvalidVestingId.selector);
         vest.unrestrict(id);
     }
 
@@ -798,7 +798,7 @@ contract VestTest is BaseTest {
     function testRevokeShouldRevertWhenInvalidId(uint256 id) public {
         id = _boundId(id);
 
-        vm.expectRevert(Vest.InvalidVestingId.selector);
+        vm.expectRevert(IVest.InvalidVestingId.selector);
         vm.prank(address(this));
         vest.revoke(id);
     }
@@ -808,7 +808,7 @@ contract VestTest is BaseTest {
 
         uint256 id = vest.create(alice, START, 0, DURATION, address(0), false, true, TOTAL);
 
-        vm.expectRevert(Vest.PermissionDenied.selector);
+        vm.expectRevert(IVest.PermissionDenied.selector);
         vm.prank(caller);
         vest.revoke(id);
     }
@@ -819,7 +819,7 @@ contract VestTest is BaseTest {
 
         uint256 id = vest.create(alice, START, 0, DURATION, bob, false, true, TOTAL);
 
-        vm.expectRevert(Vest.PermissionDenied.selector);
+        vm.expectRevert(IVest.PermissionDenied.selector);
         vm.prank(caller);
         vest.revoke(id);
     }
@@ -827,7 +827,7 @@ contract VestTest is BaseTest {
     function testRevokeShouldRevertWhenCalledByManagerAndVestingProtected() public {
         uint256 id = vest.create(alice, START, 0, DURATION, bob, false, true, TOTAL);
 
-        vm.expectRevert(Vest.PermissionDenied.selector);
+        vm.expectRevert(IVest.PermissionDenied.selector);
         vm.prank(bob);
         vest.revoke(id);
     }
