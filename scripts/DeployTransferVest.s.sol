@@ -15,7 +15,7 @@ contract DeployTransferVest is Script{
         uint256 deployerPrivateKey = vm.envUint("DEPLOYER_KEY");
         vm.startBroadcast(deployerPrivateKey);
         address deployedInstance = address(new TransferVest(owner, sender, token));
-        console.log("TransferVest contract deployed at: ",deployedInstance, " for the token: ", token);
+        console.log("TransferVest contract deployed at: ", deployedInstance, " for the token: ", token);
         vm.stopBroadcast();
     }
 }
