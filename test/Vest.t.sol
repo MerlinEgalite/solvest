@@ -6,9 +6,8 @@ import "forge-std/StdStorage.sol";
 import "./helpers/BaseTest.sol";
 import "../src/Vest.sol";
 
-
 contract SimpleMockVest is Vest {
-    constructor (address owner) Vest(owner) {}
+    constructor(address owner) Vest(owner) {}
 
     function _transfer(address receiver, uint256 amount) internal override {}
 }
@@ -744,9 +743,13 @@ contract VestTest is BaseTest {
         assertEq(vest.getAccrued(time, start, end, total), expected);
     }
 
-    function testUnclaimedBeforeCliff(uint256 time, uint256 start, uint256 cliffDuration, uint256 duration, uint256 total)
-        public
-    {
+    function testUnclaimedBeforeCliff(
+        uint256 time,
+        uint256 start,
+        uint256 cliffDuration,
+        uint256 duration,
+        uint256 total
+    ) public {
         total = bound(total, 1, type(uint128).max);
         start = _boundStart(start);
         duration = bound(duration, 1, TWENTY_YEARS);
@@ -845,7 +848,9 @@ contract VestTest is BaseTest {
         vest.revoke(id);
     }
 
-    function testRevokeBeforeStart(uint256 end, uint256 start, uint256 cliffDuration, uint256 duration, uint256 total) public {
+    function testRevokeBeforeStart(uint256 end, uint256 start, uint256 cliffDuration, uint256 duration, uint256 total)
+        public
+    {
         total = bound(total, TOTAL, type(uint128).max);
         start = bound(start, block.timestamp + 1, block.timestamp + TWENTY_YEARS - 1);
         duration = bound(duration, OFFSET, TWENTY_YEARS);
@@ -868,7 +873,9 @@ contract VestTest is BaseTest {
         assertEq(vesting.total, 0, "total");
     }
 
-    function testRevokeBeforeCliff(uint256 end, uint256 start, uint256 cliffDuration, uint256 duration, uint256 total) public {
+    function testRevokeBeforeCliff(uint256 end, uint256 start, uint256 cliffDuration, uint256 duration, uint256 total)
+        public
+    {
         total = bound(total, TOTAL, type(uint128).max);
         start = bound(start, block.timestamp, block.timestamp + TWENTY_YEARS - 1);
         duration = bound(duration, OFFSET, TWENTY_YEARS);
@@ -891,7 +898,9 @@ contract VestTest is BaseTest {
         assertEq(vesting.total, 0, "total");
     }
 
-    function testRevokeAfterEnd(uint256 end, uint256 start, uint256 cliffDuration, uint256 duration, uint256 total) public {
+    function testRevokeAfterEnd(uint256 end, uint256 start, uint256 cliffDuration, uint256 duration, uint256 total)
+        public
+    {
         total = bound(total, TOTAL, type(uint128).max);
         start = bound(start, block.timestamp, block.timestamp + TWENTY_YEARS - 1);
         duration = bound(duration, OFFSET, TWENTY_YEARS);
