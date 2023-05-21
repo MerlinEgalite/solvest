@@ -3,6 +3,7 @@
 Improved version of the [MakerDAO dss-vest contracts](https://github.com/makerdao/dss-vest/blob/master). Solvest allows to easily create multiple vesting plans with different parameters.
 
 Most noticeable differences compared to `dss-vest`:
+
 - Better naming.
 - There is only one single owner for a vesting contract instead of multiple owners.
 - The owner can protect/unprotect a vesting plan to be revoked by a manager.
@@ -19,42 +20,62 @@ Pass the authorized sender address and the address of the token contract to the 
 ## Installation
 
 Download foundry:
+
 ```bash
 curl -L https://foundry.paradigm.xyz | bash
 ```
 
 Install it:
+
 ```bash
 foundryup
 ```
 
 Install dependencies:
+
 ```bash
 git submodule update --init --recursive
 ```
 
 Now you can run tests, using forge:
+
 ```bash
 forge test
 ```
 
+## Deployment
+
+- Create a `.env` file and add the `DEPLOYER_KEY` to the env file.
+
+- To deploy the `MintVest` contract, run the following command.
+
+```sh
+forge script scripts/DeployMintVest.s.sol:DeployMintVest --broadcast --rpc-url <RPC_URL> -vvvv
+```
+
+- To deploy the `TransferVest` contract, run the following command.
+
+```sh
+forge script scripts/DeployTransferVest.s.sol:DeployTransferVest --broadcast --rpc-url <RPC_URL> -vvvv
+```
+
 ## DssVest <> Solvest translation
 
-| DssVest      | Solvest      |
-|--------------|--------------|
-| wards        | owner        |
-| bgn          | start        |
-| clf          | cliff        |
-| fin          | end          |
-| mgr          | manager      |
-| res          | restricted   |
-| tot          | total        |
-| rxd          | claimed      |
-| awards       | vestings     |
-| vest         | claim        |
-| unpaid       | unclaimed    |
-| yank         | revoke       |
-| pay          | transfer     |
-| move         | setReceiver  |
-| czar         | sender       |
-| gem          | token        |
+| DssVest | Solvest     |
+| ------- | ----------- |
+| wards   | owner       |
+| bgn     | start       |
+| clf     | cliff       |
+| fin     | end         |
+| mgr     | manager     |
+| res     | restricted  |
+| tot     | total       |
+| rxd     | claimed     |
+| awards  | vestings    |
+| vest    | claim       |
+| unpaid  | unclaimed   |
+| yank    | revoke      |
+| pay     | transfer    |
+| move    | setReceiver |
+| czar    | sender      |
+| gem     | token       |
