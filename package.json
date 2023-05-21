@@ -1,0 +1,26 @@
+{
+  "name": "solvest",
+  "version": "1.0.0",
+  "description": "Easy to use vesting contracts written in Solidity",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "forge test",
+    "format": "forge fmt"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MerlinEgalite/solvest.git"
+  },
+  "author": "Merlin Egalite",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MerlinEgalite/solvest/issues"
+  },
+  "homepage": "https://github.com/MerlinEgalite/solvest#readme",
+  "devDependencies": {
+    "husky": "^8.0.3"
+  }
+}
